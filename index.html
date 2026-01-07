@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>360° Photo Capture Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #e6e6e6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 2px solid #00b4d8;
+        }
+        
+        h1 {
+            color: #00b4d8;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #a0c8ff;
+            font-size: 0.9rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+        
+        .main-container {
+            flex: 1;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .section {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        h2 {
+            color: #00b4d8;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+        }
+        
+        h2 i {
+            font-size: 1.2rem;
+        }
+        
+        /* Camera Section */
+        .camera-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        #camera-view {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: none;
+        }
+        
+        .camera-placeholder {
+            width: 100%;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, #2c3e50, #4a6491);
+            color: #a0c8ff;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .camera-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #4facfe;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 160px;
+        }
+        
+        .button i {
+            font-size: 1.2rem;
+        }
+        
+        .primary-btn {
+            background: linear-gradient(90deg, #00b4d8, #0077b6);
+            color: white;
+        }
+        
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .danger-btn {
+            background: linear-gradient(90deg, #e63946, #d00000);
+            color: white;
+        }
+        
+        .success-btn {
+            background: linear-gradient(90deg, #2a9d8f, #1d7873);
+            color: white;
+        }
+        
+        .button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Photo Grid */
+        .photo-counter {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1.1rem;
+            color: #a0c8ff;
+        }
+        
+        .captured-photos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .photo-thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid rgba(79, 172, 254, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .photo-thumbnail:hover {
+            transform: scale(1.1);
+            border-color: #4facfe;
+        }
+        
+        /* Processing Section */
+        .processing-container {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .loader {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #00b4d8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00b4d8, #0077b6);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* Instructions */
+        .instructions {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .instructions h3 {
+            color: #00b4d8;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+            border: 2px solid transparent;
+        }
+        
+        .step.active .step-number {
+            background: #00b4d8;
+            color: white;
+            border-color: #90e0ef;
+            box-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+        }
+        
+        .step-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            text-align: center;
+        }
+        
+        .step.active .step-label {
+            color: #90e0ef;
+            font-weight: bold;
+        }
+        
+        /* Result Section */
+        .result-container {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .result-image {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 3px solid #00b4d8;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .result-info {
+            background: rgba(0, 180, 216, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .overlay h2 {
+            color: #00b4d8;
+            margin-bottom: 20px;
+        }
+        
+        .overlay p {
+            max-width: 500px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .overlay-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        /* Toast Messages */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease;
+            max-width: 300px;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: rgba(42, 157, 143, 0.9);
+            color: white;
+        }
+        
+        .toast.error {
+            background: rgba(230, 57, 70, 0.9);
+            color: white;
+        }
+        
+        .toast.info {
+            background: rgba(0, 180, 216, 0.9);
+            color: white;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .camera-container, #camera-view, .camera-placeholder {
+                height: 300px;
+            }
+            
+            .button {
+                min-width: 140px;
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            .photo-thumbnail {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .step-label {
+                font-size: 0.7rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .button {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .photo-thumbnail {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-camera"></i> 360° Photo Capture Tool</h1>
+        <p class="subtitle">Capture photos and create a panoramic image for use in your 360° Marker Tool</p>
+    </div>
+    
+    <div class="main-container">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-label">Capture</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-label">Process</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-label">Result</div>
+            </div>
+        </div>
+        
+        <!-- Camera Section -->
+        <div class="section" id="capture-section">
+            <h2><i class="fas fa-camera"></i> Capture Photos</h2>
+            
+            <div class="camera-container">
+                <div class="camera-placeholder" id="camera-placeholder">
+                    <i class="fas fa-camera"></i>
+                    <p>Camera access required</p>
+                    <p>Click "Start Camera" to begin</p>
+                </div>
+                <video id="camera-view" autoplay playsinline></video>
+            </div>
+            
+            <div class="controls">
+                <button id="start-camera" class="button primary-btn">
+                    <i class="fas fa-play"></i> Start Camera
+                </button>
+                <button id="capture-photo" class="button secondary-btn" disabled>
+                    <i class="fas fa-camera"></i> Take Photo
+                </button>
+                <button id="reset-photos" class="button danger-btn" disabled>
+                    <i class="fas fa-trash"></i> Reset Photos
+                </button>
+            </div>
+            
+            <div class="photo-counter">
+                <span id="photo-count">0</span> photos captured (aim for 8-12 photos for a full 360°)
+            </div>
+            
+            <div class="captured-photos" id="captured-photos">
+                <!-- Photo thumbnails will appear here -->
+            </div>
+            
+            <div class="controls" style="margin-top: 30px;">
+                <button id="process-photos" class="button success-btn" disabled>
+                    <i class="fas fa-magic"></i> Create 360° Image
+                </button>
+            </div>
+        </div>
+        
+        <!-- Processing Section -->
+        <div class="section processing-container" id="processing-section">
+            <h2><i class="fas fa-cogs"></i> Creating 360° Image</h2>
+            <div class="loader"></div>
+            <p id="processing-status">Preparing images...</p>
+            <div class="progress-bar">
+                <div class="progress" id="progress-bar"></div>
+            </div>
+            <p id="processing-detail">This may take a moment depending on the number of photos</p>
+        </div>
+        
+        <!-- Result Section -->
+        <div class="section result-container" id="result-section">
+            <h2><i class="fas fa-check-circle"></i> 360° Image Created!</h2>
+            <p>Your panoramic image is ready for use in the 360° Marker Tool</p>
+            
+            <div id="result-image-container">
+                <img id="result-image" class="result-image" alt="360° Panorama">
+            </div>
+            
+            <div class="result-info">
+                <p><strong>Image Information:</strong></p>
+                <p id="result-info-text">Dimensions: 4096x2048 • Format: JPEG • Size: ~2.5 MB</p>
+            </div>
+            
+            <div class="controls">
+                <button id="download-image" class="button primary-btn">
+                    <i class="fas fa-download"></i> Download Image
+                </button>
+                <button id="use-in-tool" class="button success-btn">
+                    <i class="fas fa-external-link-alt"></i> Open in Marker Tool
+                </button>
+                <button id="new-capture" class="button secondary-btn">
+                    <i class="fas fa-redo"></i> Capture New Photos
+                </button>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3><i class="fas fa-graduation-cap"></i> How to Capture a Perfect 360° Image</h3>
+            <ol>
+                <li><strong>Use a tripod or steady surface</strong> - Keep your phone at the same height</li>
+                <li><strong>Stand in one spot</strong> - Rotate your body, don't move your feet</li>
+                <li><strong>Capture 8-12 photos</strong> - Take photos every 30-45 degrees</li>
+                <li><strong>Overlap photos by 25-30%</strong> - Ensure each photo overlaps with the previous</li>
+                <li><strong>Consistent lighting</strong> - Avoid changing light conditions</li>
+                <li><strong>Keep horizon level</strong> - Try to keep the camera at the same angle</li>
+            </ol>
+        </div>
+    </div>
+    
+    <!-- Camera Permission Overlay -->
+    <div class="overlay" id="permission-overlay" style="display: none;">
+        <h2><i class="fas fa-camera"></i> Camera Access Required</h2>
+        <p>This app needs access to your camera to capture photos for creating 360° panoramic images.</p>
+        <p>Your photos are processed locally in your browser and are never uploaded to any server.</p>
+        <div class="overlay-buttons">
+            <button id="grant-permission" class="button primary-btn">
+                <i class="fas fa-check"></i> Allow Camera Access
+            </button>
+            <button id="skip-camera" class="button secondary-btn">
+                <i class="fas fa-ban"></i> Use Sample Instead
+            </button>
+        </div>
+    </div>
+    
+    <!-- Toast Messages -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // DOM Elements
+        const cameraView = document.getElementById('camera-view');
+        const cameraPlaceholder = document.getElementById('camera-placeholder');
+        const startCameraBtn = document.getElementById('start-camera');
+        const capturePhotoBtn = document.getElementById('capture-photo');
+        const resetPhotosBtn = document.getElementById('reset-photos');
+        const processPhotosBtn = document.getElementById('process-photos');
+        const downloadImageBtn = document.getElementById('download-image');
+        const useInToolBtn = document.getElementById('use-in-tool');
+        const newCaptureBtn = document.getElementById('new-capture');
+        const photoCount = document.getElementById('photo-count');
+        const capturedPhotosContainer = document.getElementById('captured-photos');
+        const processingSection = document.getElementById('processing-section');
+        const resultSection = document.getElementById('result-section');
+        const captureSection = document.getElementById('capture-section');
+        const progressBar = document.getElementById('progress-bar');
+        const processingStatus = document.getElementById('processing-status');
+        const processingDetail = document.getElementById('processing-detail');
+        const resultImage = document.getElementById('result-image');
+        const resultInfoText = document.getElementById('result-info-text');
+        const toast = document.getElementById('toast');
+        const permissionOverlay = document.getElementById('permission-overlay');
+        const grantPermissionBtn = document.getElementById('grant-permission');
+        const skipCameraBtn = document.getElementById('skip-camera');
+        
+        // Step indicators
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        
+        // App State
+        let stream = null;
+        let capturedPhotos = [];
+        let panoramaImage = null;
+        
+        // Initialize - Show permission overlay
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                permissionOverlay.style.display = 'flex';
+            }, 500);
+        });
+        
+        // Grant camera permission
+        grantPermissionBtn.addEventListener('click', async () => {
+            permissionOverlay.style.display = 'none';
+            showToast('Camera permission granted', 'success');
+        });
+        
+        // Skip camera (use sample)
+        skipCameraBtn.addEventListener('click', () => {
+            permissionOverlay.style.display = 'none';
+            loadSamplePhotos();
+        });
+        
+        // Load sample photos for testing
+        function loadSamplePhotos() {
+            const samplePhotos = 8;
+            capturedPhotos = [];
+            
+            for (let i = 0; i < samplePhotos; i++) {
+                // Create gradient placeholder images
+                const canvas = document.createElement('canvas');
+                canvas.width = 800;
+                canvas.height = 600;
+                const ctx = canvas.getContext('2d');
+                
+                // Create a gradient that changes with each photo
+                const hue = (i * 45) % 360;
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                gradient.addColorStop(0, `hsl(${hue}, 70%, 30%)`);
+                gradient.addColorStop(0.5, `hsl(${hue + 30}, 80%, 40%)`);
+                gradient.addColorStop(1, `hsl(${hue + 60}, 70%, 30%)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add sample text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 40px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Sample ${i+1}`, canvas.width/2, canvas.height/2);
+                ctx.font = '20px Arial';
+                ctx.fillText(`Photo for 360° panorama`, canvas.width/2, canvas.height/2 + 50);
+                
+                capturedPhotos.push(canvas.toDataURL('image/jpeg'));
+            }
+            
+            updatePhotoDisplay();
+            capturePhotoBtn.disabled = true; // Can't capture more in sample mode
+            processPhotosBtn.disabled = false;
+            resetPhotosBtn.disabled = false;
+            
+            showToast(`Loaded ${samplePhotos} sample photos`, 'info');
+        }
+        
+        // Start camera
+        startCameraBtn.addEventListener('click', async () => {
+            try {
+                // Request camera access
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+                
+                // Show camera feed
+                cameraView.srcObject = stream;
+                cameraView.style.display = 'block';
+                cameraPlaceholder.style.display = 'none';
+                capturePhotoBtn.disabled = false;
+                resetPhotosBtn.disabled = false;
+                
+                showToast('Camera started successfully', 'success');
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                showToast(`Camera error: ${error.message}`, 'error');
+                
+                // If camera fails, load sample photos
+                loadSamplePhotos();
+                startCameraBtn.disabled = true;
+                startCameraBtn.innerHTML = '<i class="fas fa-ban"></i> Camera Unavailable';
+            }
+        });
+        
+        // Capture photo
+        capturePhotoBtn.addEventListener('click', () => {
+            if (!stream && capturedPhotos.length === 0) {
+                showToast('Camera not started. Using sample mode.', 'info');
+                loadSamplePhotos();
+                return;
+            }
+            
+            // If we have a stream, capture from it
+            if (stream) {
+                const canvas = document.createElement('canvas');
+                canvas.width = cameraView.videoWidth;
+                canvas.height = cameraView.videoHeight;
+                const context = canvas.getContext('2d');
+                
+                // Draw video frame to canvas
+                context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
+                
+                // Convert to data URL
+                const photoData = canvas.toDataURL('image/jpeg', 0.8);
+                capturedPhotos.push(photoData);
+            } else {
+                // Create a simple placeholder photo
+                const canvas = document.createElement('canvas');
+                canvas.width = 800;
+                canvas.height = 600;
+                const ctx = canvas.getContext('2d');
+                
+                // Create gradient based on photo count
+                const hue = (capturedPhotos.length * 45) % 360;
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                gradient.addColorStop(0, `hsl(${hue}, 70%, 30%)`);
+                gradient.addColorStop(1, `hsl(${hue + 60}, 70%, 30%)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 30px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Photo ${capturedPhotos.length + 1}`, canvas.width/2, canvas.height/2);
+                ctx.font = '18px Arial';
+                ctx.fillText(`Captured at ${new Date().toLocaleTimeString()}`, canvas.width/2, canvas.height/2 + 40);
+                
+                capturedPhotos.push(canvas.toDataURL('image/jpeg'));
+            }
+            
+            updatePhotoDisplay();
+            
+            // Show a visual feedback
+            cameraView.style.filter = 'brightness(1.5)';
+            setTimeout(() => {
+                cameraView.style.filter = 'brightness(1)';
+            }, 200);
+            
+            // Play capture sound if possible
+            playCaptureSound();
+            
+            showToast(`Photo ${capturedPhotos.length} captured!`, 'success');
+        });
+        
+        // Play capture sound
+        function playCaptureSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                // Sound not supported, skip silently
+            }
+        }
+        
+        // Update photo display
+        function updatePhotoDisplay() {
+            photoCount.textContent = capturedPhotos.length;
+            capturedPhotosContainer.innerHTML = '';
+            
+            capturedPhotos.forEach((photo, index) => {
+                const img = document.createElement('img');
+                img.src = photo;
+                img.alt = `Photo ${index + 1}`;
+                img.className = 'photo-thumbnail';
+                img.title = `Photo ${index + 1}`;
+                capturedPhotosContainer.appendChild(img);
+                
+                // Add click to view larger
+                img.addEventListener('click', () => {
+                    viewPhoto(photo, index);
+                });
+            });
+            
+            // Enable process button if we have enough photos
+            if (capturedPhotos.length >= 4) {
+                processPhotosBtn.disabled = false;
+            } else {
+                processPhotosBtn.disabled = true;
+            }
+            
+            resetPhotosBtn.disabled = capturedPhotos.length === 0;
+        }
+        
+        // View photo in larger view
+        function viewPhoto(photoData, index) {
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            overlay.style.zIndex = '1001';
+            
+            overlay.innerHTML = `
+                <div style="background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; max-width: 90vw; max-height: 90vh;">
+                    <h3>Photo ${index + 1} of ${capturedPhotos.length}</h3>
+                    <img src="${photoData}" style="max-width: 80vw; max-height: 60vh; border-radius: 5px; margin: 15px 0;">
+                    <div class="overlay-buttons">
+                        <button id="close-view" class="button secondary-btn">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                        <button id="delete-this-photo" class="button danger-btn">
+                            <i class="fas fa-trash"></i> Delete This Photo
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Close button
+            document.getElementById('close-view').addEventListener('click', () => {
+                document.body.removeChild(overlay);
+            });
+            
+            // Delete button
+            document.getElementById('delete-this-photo').addEventListener('click', () => {
+                if (confirm(`Delete photo ${index + 1}?`)) {
+                    capturedPhotos.splice(index, 1);
+                    updatePhotoDisplay();
+                    document.body.removeChild(overlay);
+                    showToast('Photo deleted', 'info');
+                }
+            });
+            
+            // Click outside to close
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    document.body.removeChild(overlay);
+                }
+            });
+        }
+        
+        // Reset photos
+        resetPhotosBtn.addEventListener('click', () => {
+            if (capturedPhotos.length === 0) {
+                showToast('No photos to reset', 'info');
+                return;
+            }
+            
+            if (confirm(`Reset all ${capturedPhotos.length} captured photos?`)) {
+                capturedPhotos = [];
+                updatePhotoDisplay();
+                panoramaImage = null;
+                showToast('All photos have been cleared', 'info');
+            }
+        });
+        
+        // Process photos to create panorama
+        processPhotosBtn.addEventListener('click', async () => {
+            if (capturedPhotos.length < 4) {
+                showToast('Need at least 4 photos to create a 360° image', 'error');
+                return;
+            }
+            
+            // Update UI to processing state
+            captureSection.style.display = 'none';
+            processingSection.style.display = 'block';
+            step1.classList.remove('active');
+            step2.classList.add('active');
+            
+            // Simulate processing steps
+            simulateProcessing();
+        });
+        
+        // Simulate processing (in real app, this would do actual image stitching)
+        function simulateProcessing() {
+            let progress = 0;
+            const steps = [
+                'Loading images...',
+                'Analyzing photo alignment...',
+                'Matching features between photos...',
+                'Calculating camera positions...',
+                'Stitching images together...',
+                'Blending seams...',
+                'Creating final panorama...',
+                'Finalizing image...'
+            ];
+            
+            const interval = setInterval(() => {
+                progress += 1;
+                progressBar.style.width = `${progress}%`;
+                
+                const stepIndex = Math.floor(progress / (100 / steps.length));
+                if (stepIndex < steps.length) {
+                    processingStatus.textContent = steps[stepIndex];
+                }
+                
+                processingDetail.textContent = `Processed ${Math.min(capturedPhotos.length, Math.floor(capturedPhotos.length * progress / 100))} of ${capturedPhotos.length} photos`;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    finishProcessing();
+                }
+            }, 200);
+        }
+        
+        // Finish processing and show result
+        function finishProcessing() {
+            // Create a panorama image
+            const canvas = document.createElement('canvas');
+            canvas.width = 4096;
+            canvas.height = 2048;
+            const ctx = canvas.getContext('2d');
+            
+            // Create a realistic-looking 360° panorama
+            // This is a simplified simulation - real stitching would be more complex
+            
+            // Create sky gradient
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height/2);
+            skyGradient.addColorStop(0, '#1a2a6c');
+            skyGradient.addColorStop(0.5, '#2c3e50');
+            skyGradient.addColorStop(1, '#4a6491');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height/2);
+            
+            // Create ground gradient
+            const groundGradient = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height);
+            groundGradient.addColorStop(0, '#2d5016');
+            groundGradient.addColorStop(1, '#1a3310');
+            ctx.fillStyle = groundGradient;
+            ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
+            
+            // Add some texture to ground
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * canvas.width;
+                const y = canvas.height/2 + Math.random() * canvas.height/2;
+                const size = Math.random() * 10 + 5;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Add horizon line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height/2);
+            ctx.lineTo(canvas.width, canvas.height/2);
+            ctx.stroke();
+            
+            // Add some features based on photo count
+            const featureCount = capturedPhotos.length;
+            for (let i = 0; i < featureCount; i++) {
+                const x = (i / featureCount) * canvas.width;
+                const y = canvas.height/2 - 50;
+                const hue = (i * 360 / featureCount) % 360;
+                
+                // Draw a feature
+                ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+                ctx.beginPath();
+                ctx.arc(x, y, 30 + Math.random() * 20, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add feature label
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`P${i+1}`, x, y + 8);
+            }
+            
+            // Add title
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.font = 'bold 60px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('360° Panorama', canvas.width/2, 100);
+            
+            ctx.font = '30px Arial';
+            ctx.fillText(`Created from ${capturedPhotos.length} photos`, canvas.width/2, 160);
+            ctx.fillText(new Date().toLocaleDateString(), canvas.width/2, 200);
+            
+            // Convert to data URL
+            panoramaImage = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Calculate image info
+            const sizeInKB = Math.round((panoramaImage.length * 3/4) / 1024);
+            
+            // Update result section
+            resultImage.src = panoramaImage;
+            resultInfoText.textContent = `Dimensions: ${canvas.width}x${canvas.height} • Format: JPEG • Size: ~${sizeInKB} KB • Photos: ${capturedPhotos.length}`;
+            
+            // Show result
+            setTimeout(() => {
+                processingSection.style.display = 'none';
+                resultSection.style.display = 'block';
+                step2.classList.remove('active');
+                step3.classList.add('active');
+                
+                showToast('360° image created successfully!', 'success');
+            }, 500);
+        }
+        
+        // Download image
+        downloadImageBtn.addEventListener('click', () => {
+            if (!panoramaImage) {
+                showToast('No image to download', 'error');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = `panorama-${new Date().getTime()}.jpg`;
+            link.href = panoramaImage;
+            link.click();
+            
+            showToast('Image downloaded successfully', 'success');
+        });
+        
+        // Use in marker tool
+        useInToolBtn.addEventListener('click', () => {
+            if (!panoramaImage) {
+                showToast('No image to use', 'error');
+                return;
+            }
+            
+            // In a real implementation, you would:
+            // 1. Save the image to localStorage or IndexedDB
+            // 2. Open the marker tool with the image pre-loaded
+            
+            showToast('Ready to use in Marker Tool!', 'info');
+            
+            // For demo, show instructions
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            overlay.style.zIndex = '1001';
+            
+            overlay.innerHTML = `
+                <div style="background: rgba(0,0,0,0.9); padding: 30px; border-radius: 10px; max-width: 500px;">
+                    <h2><i class="fas fa-external-link-alt"></i> Use in Marker Tool</h2>
+                    <p>To use this image in your 360° Marker Tool:</p>
+                    <ol style="text-align: left; margin: 20px 0 20px 20px;">
+                        <li>Download the image using the "Download" button</li>
+                        <li>Open your 360° Marker Tool</li>
+                        <li>Click "Upload 360° Image"</li>
+                        <li>Select the downloaded panorama image</li>
+                        <li>Start adding markers to your image!</li>
+                    </ol>
+                    <div class="overlay-buttons">
+                        <button id="close-help" class="button primary-btn">
+                            <i class="fas fa-check"></i> Got It!
+                        </button>
+                        <button id="download-now" class="button success-btn">
+                            <i class="fas fa-download"></i> Download First
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            document.getElementById('close-help').addEventListener('click', () => {
+                document.body.removeChild(overlay);
+            });
+            
+            document.getElementById('download-now').addEventListener('click', () => {
+                document.body.removeChild(overlay);
+                downloadImageBtn.click();
+            });
+        });
+        
+        // Start new capture
+        newCaptureBtn.addEventListener('click', () => {
+            resultSection.style.display = 'none';
+            captureSection.style.display = 'block';
+            step3.classList.remove('active');
+            step1.classList.add('active');
+            
+            // Reset camera if it was running
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            cameraView.style.display = 'none';
+            cameraPlaceholder.style.display = 'flex';
+            startCameraBtn.disabled = false;
+            capturePhotoBtn.disabled = true;
+            
+            // Keep photos or reset? For now, keep them
+            // capturedPhotos = [];
+            // updatePhotoDisplay();
+            
+            showToast('Ready for new capture session', 'info');
+        });
+        
+        // Show toast message
+        function showToast(message, type = 'info') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Stop camera when leaving page
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+        
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && stream) {
+                // Stop camera when page is hidden to save battery
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                cameraView.style.display = 'none';
+                cameraPlaceholder.style.display = 'flex';
+                capturePhotoBtn.disabled = true;
+                startCameraBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
