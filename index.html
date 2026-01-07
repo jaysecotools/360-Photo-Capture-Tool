@@ -551,7 +551,7 @@
             
             <div class="result-info">
                 <p><strong>Image Information:</strong></p>
-                <p id="result-info-text">Dimensions: 4096x2048 • Format: JPEG • Size: ~2.5 MB</p>
+                <p id="result-info-text">Dimensions: Loading...</p>
             </div>
             
             <div class="controls">
@@ -902,7 +902,7 @@
             }
         });
         
-        // Process photos to create panorama
+        // Process photos to create panorama - UPDATED TO USE ACTUAL PHOTOS
         processPhotosBtn.addEventListener('click', async () => {
             if (capturedPhotos.length < 4) {
                 showToast('Need at least 4 photos to create a 360° image', 'error');
@@ -915,116 +915,133 @@
             step1.classList.remove('active');
             step2.classList.add('active');
             
-            // Simulate processing steps
-            simulateProcessing();
+            // Create panorama from actual photos
+            createPanoramaFromPhotos();
         });
         
-        // Simulate processing (in real app, this would do actual image stitching)
-        function simulateProcessing() {
-            let progress = 0;
-            const steps = [
-                'Loading images...',
-                'Analyzing photo alignment...',
-                'Matching features between photos...',
-                'Calculating camera positions...',
-                'Stitching images together...',
-                'Blending seams...',
-                'Creating final panorama...',
-                'Finalizing image...'
-            ];
+        // Create panorama from actual captured photos
+        async function createPanoramaFromPhotos() {
+            // First, load all photos into Image objects
+            const photoImages = [];
             
-            const interval = setInterval(() => {
-                progress += 1;
-                progressBar.style.width = `${progress}%`;
+            for (let i = 0; i < capturedPhotos.length; i++) {
+                processingStatus.textContent = `Loading photo ${i+1} of ${capturedPhotos.length}...`;
+                progressBar.style.width = `${(i / capturedPhotos.length) * 50}%`;
                 
-                const stepIndex = Math.floor(progress / (100 / steps.length));
-                if (stepIndex < steps.length) {
-                    processingStatus.textContent = steps[stepIndex];
-                }
+                const img = new Image();
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                    img.src = capturedPhotos[i];
+                });
+                photoImages.push(img);
                 
-                processingDetail.textContent = `Processed ${Math.min(capturedPhotos.length, Math.floor(capturedPhotos.length * progress / 100))} of ${capturedPhotos.length} photos`;
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    finishProcessing();
-                }
-            }, 200);
-        }
-        
-        // Finish processing and show result
-        function finishProcessing() {
-            // Create a panorama image
+                // Small delay to show progress
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Now create the panorama
+            processingStatus.textContent = 'Creating panorama...';
+            
+            // Determine panorama dimensions
+            // Standard equirectangular panorama is 2:1 aspect ratio
+            const panoramaWidth = 4096; // Standard width for 360° panorama
+            const panoramaHeight = panoramaWidth / 2;
+            
             const canvas = document.createElement('canvas');
-            canvas.width = 4096;
-            canvas.height = 2048;
+            canvas.width = panoramaWidth;
+            canvas.height = panoramaHeight;
             const ctx = canvas.getContext('2d');
             
-            // Create a realistic-looking 360° panorama
-            // This is a simplified simulation - real stitching would be more complex
+            // Fill with a neutral background first
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(0, 0, panoramaWidth, panoramaHeight);
             
-            // Create sky gradient
-            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height/2);
-            skyGradient.addColorStop(0, '#1a2a6c');
-            skyGradient.addColorStop(0.5, '#2c3e50');
-            skyGradient.addColorStop(1, '#4a6491');
-            ctx.fillStyle = skyGradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height/2);
+            // Calculate section width for each photo
+            const sectionWidth = panoramaWidth / capturedPhotos.length;
             
-            // Create ground gradient
-            const groundGradient = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height);
-            groundGradient.addColorStop(0, '#2d5016');
-            groundGradient.addColorStop(1, '#1a3310');
-            ctx.fillStyle = groundGradient;
-            ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
-            
-            // Add some texture to ground
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-            for (let i = 0; i < 100; i++) {
-                const x = Math.random() * canvas.width;
-                const y = canvas.height/2 + Math.random() * canvas.height/2;
-                const size = Math.random() * 10 + 5;
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
-                ctx.fill();
+            // Place each photo in its section
+            for (let i = 0; i < photoImages.length; i++) {
+                const img = photoImages[i];
+                const x = i * sectionWidth;
+                
+                // Calculate scaling to fit section
+                const scale = Math.min(sectionWidth / img.width, panoramaHeight / img.height);
+                const scaledWidth = img.width * scale;
+                const scaledHeight = img.height * scale;
+                
+                // Center vertically
+                const y = (panoramaHeight - scaledHeight) / 2;
+                
+                // Draw the photo
+                ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+                
+                // Add a subtle separator
+                if (i > 0) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                    ctx.fillRect(x - 2, 0, 4, panoramaHeight);
+                }
+                
+                // Update progress
+                const progress = 50 + ((i + 1) / photoImages.length) * 50;
+                progressBar.style.width = `${progress}%`;
+                processingDetail.textContent = `Processing photo ${i+1} of ${photoImages.length}`;
+                
+                // Small delay to show progress
+                await new Promise(resolve => setTimeout(resolve, 150));
             }
+            
+            // Add blending between photos (simple gradient overlay)
+            processingStatus.textContent = 'Blending photos...';
+            
+            for (let i = 0; i < photoImages.length - 1; i++) {
+                const blendX = (i + 1) * sectionWidth;
+                const blendWidth = sectionWidth * 0.2; // Blend 20% of each section
+                
+                const gradient = ctx.createLinearGradient(
+                    blendX - blendWidth/2, 0,
+                    blendX + blendWidth/2, 0
+                );
+                
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(blendX - blendWidth/2, 0, blendWidth, panoramaHeight);
+            }
+            
+            // Add top and bottom gradients for sky/ground
+            const topGradient = ctx.createLinearGradient(0, 0, 0, panoramaHeight * 0.3);
+            topGradient.addColorStop(0, 'rgba(26, 42, 108, 0.6)');
+            topGradient.addColorStop(1, 'rgba(26, 42, 108, 0)');
+            
+            const bottomGradient = ctx.createLinearGradient(0, panoramaHeight * 0.7, 0, panoramaHeight);
+            bottomGradient.addColorStop(0, 'rgba(29, 24, 16, 0)');
+            bottomGradient.addColorStop(1, 'rgba(29, 24, 16, 0.6)');
+            
+            ctx.fillStyle = topGradient;
+            ctx.fillRect(0, 0, panoramaWidth, panoramaHeight * 0.3);
+            
+            ctx.fillStyle = bottomGradient;
+            ctx.fillRect(0, panoramaHeight * 0.7, panoramaWidth, panoramaHeight * 0.3);
             
             // Add horizon line
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(0, canvas.height/2);
-            ctx.lineTo(canvas.width, canvas.height/2);
+            ctx.moveTo(0, panoramaHeight / 2);
+            ctx.lineTo(panoramaWidth, panoramaHeight / 2);
             ctx.stroke();
             
-            // Add some features based on photo count
-            const featureCount = capturedPhotos.length;
-            for (let i = 0; i < featureCount; i++) {
-                const x = (i / featureCount) * canvas.width;
-                const y = canvas.height/2 - 50;
-                const hue = (i * 360 / featureCount) % 360;
-                
-                // Draw a feature
-                ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
-                ctx.beginPath();
-                ctx.arc(x, y, 30 + Math.random() * 20, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Add feature label
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 24px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(`P${i+1}`, x, y + 8);
-            }
-            
-            // Add title
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.font = 'bold 60px Arial';
+            // Add photo count indicator
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = 'bold 40px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('360° Panorama', canvas.width/2, 100);
+            ctx.fillText(`${capturedPhotos.length} Photos`, panoramaWidth / 2, 80);
             
-            ctx.font = '30px Arial';
-            ctx.fillText(`Created from ${capturedPhotos.length} photos`, canvas.width/2, 160);
-            ctx.fillText(new Date().toLocaleDateString(), canvas.width/2, 200);
+            ctx.font = '24px Arial';
+            ctx.fillText('360° Panorama', panoramaWidth / 2, 120);
+            ctx.fillText(new Date().toLocaleDateString(), panoramaWidth / 2, 150);
             
             // Convert to data URL
             panoramaImage = canvas.toDataURL('image/jpeg', 0.9);
@@ -1069,49 +1086,54 @@
                 return;
             }
             
-            // In a real implementation, you would:
-            // 1. Save the image to localStorage or IndexedDB
-            // 2. Open the marker tool with the image pre-loaded
-            
-            showToast('Ready to use in Marker Tool!', 'info');
-            
-            // For demo, show instructions
-            const overlay = document.createElement('div');
-            overlay.className = 'overlay';
-            overlay.style.zIndex = '1001';
-            
-            overlay.innerHTML = `
-                <div style="background: rgba(0,0,0,0.9); padding: 30px; border-radius: 10px; max-width: 500px;">
-                    <h2><i class="fas fa-external-link-alt"></i> Use in Marker Tool</h2>
-                    <p>To use this image in your 360° Marker Tool:</p>
-                    <ol style="text-align: left; margin: 20px 0 20px 20px;">
-                        <li>Download the image using the "Download" button</li>
-                        <li>Open your 360° Marker Tool</li>
-                        <li>Click "Upload 360° Image"</li>
-                        <li>Select the downloaded panorama image</li>
-                        <li>Start adding markers to your image!</li>
-                    </ol>
-                    <div class="overlay-buttons">
-                        <button id="close-help" class="button primary-btn">
-                            <i class="fas fa-check"></i> Got It!
-                        </button>
-                        <button id="download-now" class="button success-btn">
-                            <i class="fas fa-download"></i> Download First
-                        </button>
+            // Save to localStorage for the marker tool to use
+            try {
+                localStorage.setItem('lastPanoramaImage', panoramaImage);
+                localStorage.setItem('lastPanoramaName', `Panorama_${new Date().getTime()}`);
+                
+                showToast('Image saved! Open your Marker Tool to use it.', 'success');
+                
+                // Show instructions
+                const overlay = document.createElement('div');
+                overlay.className = 'overlay';
+                overlay.style.zIndex = '1001';
+                
+                overlay.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.9); padding: 30px; border-radius: 10px; max-width: 500px;">
+                        <h2><i class="fas fa-external-link-alt"></i> Use in Marker Tool</h2>
+                        <p>Your panorama has been saved!</p>
+                        <p>To use it in your 360° Marker Tool:</p>
+                        <ol style="text-align: left; margin: 20px 0 20px 20px;">
+                            <li>Open your 360° Marker Tool in another tab</li>
+                            <li>Click "Upload 360° Image"</li>
+                            <li>Select "Load from Photo Capture Tool" option</li>
+                            <li>Your panorama will load automatically!</li>
+                        </ol>
+                        <p style="color: #90e0ef; font-style: italic;">Alternatively, download the image and upload it manually.</p>
+                        <div class="overlay-buttons">
+                            <button id="close-help" class="button primary-btn">
+                                <i class="fas fa-check"></i> Got It!
+                            </button>
+                            <button id="download-anyway" class="button success-btn">
+                                <i class="fas fa-download"></i> Download Anyway
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `;
-            
-            document.body.appendChild(overlay);
-            
-            document.getElementById('close-help').addEventListener('click', () => {
-                document.body.removeChild(overlay);
-            });
-            
-            document.getElementById('download-now').addEventListener('click', () => {
-                document.body.removeChild(overlay);
-                downloadImageBtn.click();
-            });
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                document.getElementById('close-help').addEventListener('click', () => {
+                    document.body.removeChild(overlay);
+                });
+                
+                document.getElementById('download-anyway').addEventListener('click', () => {
+                    document.body.removeChild(overlay);
+                    downloadImageBtn.click();
+                });
+            } catch (error) {
+                showToast('Error saving image. Please download it instead.', 'error');
+            }
         });
         
         // Start new capture
@@ -1132,9 +1154,9 @@
             startCameraBtn.disabled = false;
             capturePhotoBtn.disabled = true;
             
-            // Keep photos or reset? For now, keep them
-            // capturedPhotos = [];
-            // updatePhotoDisplay();
+            // Reset photos
+            capturedPhotos = [];
+            updatePhotoDisplay();
             
             showToast('Ready for new capture session', 'info');
         });
@@ -1169,6 +1191,78 @@
                 startCameraBtn.disabled = false;
             }
         });
+        
+        // Helper function to create a more realistic panorama with actual photo stitching
+        function createBetterPanorama(photoImages) {
+            // This is a simplified stitching algorithm
+            // In a production app, you'd want to use a library like OpenCV.js or 
+            // send images to a backend service for proper stitching
+            
+            // For now, we'll create a simple linear layout
+            const totalWidth = photoImages.reduce((sum, img) => sum + img.width, 0);
+            const maxHeight = Math.max(...photoImages.map(img => img.height));
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = totalWidth;
+            canvas.height = maxHeight;
+            const ctx = canvas.getContext('2d');
+            
+            let currentX = 0;
+            for (let i = 0; i < photoImages.length; i++) {
+                const img = photoImages[i];
+                
+                // Calculate vertical center
+                const y = (maxHeight - img.height) / 2;
+                
+                // Draw the photo
+                ctx.drawImage(img, currentX, y);
+                
+                // Add a simple blend to next photo
+                if (i < photoImages.length - 1) {
+                    const nextImg = photoImages[i + 1];
+                    const blendWidth = Math.min(img.width, nextImg.width) * 0.3;
+                    
+                    // Create gradient for blending
+                    const gradient = ctx.createLinearGradient(
+                        currentX + img.width - blendWidth, 0,
+                        currentX + img.width, 0
+                    );
+                    
+                    gradient.addColorStop(0, 'rgba(0,0,0,0)');
+                    gradient.addColorStop(1, 'rgba(0,0,0,1)');
+                    
+                    // Save context for blending
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'destination-in';
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(currentX + img.width - blendWidth, 0, blendWidth, maxHeight);
+                    ctx.restore();
+                }
+                
+                currentX += img.width;
+            }
+            
+            // Now wrap this into equirectangular format
+            const equirectCanvas = document.createElement('canvas');
+            equirectCanvas.width = 4096;
+            equirectCanvas.height = 2048;
+            const equirectCtx = equirectCanvas.getContext('2d');
+            
+            // Map the linear panorama to equirectangular
+            for (let x = 0; x < equirectCanvas.width; x++) {
+                // Map x coordinate to panorama (wrapping around)
+                const sourceX = (x / equirectCanvas.width) * canvas.width;
+                
+                // Draw column from panorama
+                equirectCtx.drawImage(
+                    canvas,
+                    sourceX, 0, 1, canvas.height,
+                    x, 0, 1, equirectCanvas.height
+                );
+            }
+            
+            return equirectCanvas.toDataURL('image/jpeg', 0.9);
+        }
     </script>
 </body>
 </html>
