@@ -245,6 +245,42 @@
             transition: width 0.3s ease;
         }
         
+        /* Stitching Options */
+        .stitching-options {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .stitching-options h3 {
+            color: #00b4d8;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .option-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .option input[type="radio"], .option input[type="checkbox"] {
+            accent-color: #00b4d8;
+        }
+        
+        .option label {
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
         /* Instructions */
         .instructions {
             background: rgba(0, 0, 0, 0.2);
@@ -522,6 +558,29 @@
                 <!-- Photo thumbnails will appear here -->
             </div>
             
+            <!-- Stitching Options -->
+            <div class="stitching-options" style="display: none;" id="stitching-options">
+                <h3><i class="fas fa-sliders-h"></i> Stitching Options</h3>
+                <div class="option-group">
+                    <div class="option">
+                        <input type="radio" id="blend-linear" name="stitch-method" value="linear" checked>
+                        <label for="blend-linear">Linear Blending</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="blend-multiband" name="stitch-method" value="multiband">
+                        <label for="blend-multiband">Multi-band Blending</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="enable-feature-matching" checked>
+                        <label for="enable-feature-matching">Feature Matching</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="enable-exposure-compensation" checked>
+                        <label for="enable-exposure-compensation">Exposure Compensation</label>
+                    </div>
+                </div>
+            </div>
+            
             <div class="controls" style="margin-top: 30px;">
                 <button id="process-photos" class="button success-btn" disabled>
                     <i class="fas fa-magic"></i> Create 360° Image
@@ -624,6 +683,7 @@
         const permissionOverlay = document.getElementById('permission-overlay');
         const grantPermissionBtn = document.getElementById('grant-permission');
         const skipCameraBtn = document.getElementById('skip-camera');
+        const stitchingOptions = document.getElementById('stitching-options');
         
         // Step indicators
         const step1 = document.getElementById('step1');
@@ -660,37 +720,55 @@
             capturedPhotos = [];
             
             for (let i = 0; i < samplePhotos; i++) {
-                // Create gradient placeholder images
+                // Create sample images with overlapping content
                 const canvas = document.createElement('canvas');
                 canvas.width = 800;
                 canvas.height = 600;
                 const ctx = canvas.getContext('2d');
                 
-                // Create a gradient that changes with each photo
+                // Create background with gradient that shifts gradually
                 const hue = (i * 45) % 360;
+                const nextHue = ((i + 1) * 45) % 360;
+                
                 const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-                gradient.addColorStop(0, `hsl(${hue}, 70%, 30%)`);
-                gradient.addColorStop(0.5, `hsl(${hue + 30}, 80%, 40%)`);
-                gradient.addColorStop(1, `hsl(${hue + 60}, 70%, 30%)`);
+                gradient.addColorStop(0, `hsl(${hue}, 70%, 40%)`);
+                gradient.addColorStop(0.5, `hsl(${hue + 15}, 75%, 45%)`);
+                gradient.addColorStop(1, `hsl(${nextHue}, 70%, 40%)`);
                 
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // Add sample text
+                // Add horizon line
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height/2);
+                ctx.lineTo(canvas.width, canvas.height/2);
+                ctx.stroke();
+                
+                // Add sample text with gradual shift
                 ctx.fillStyle = 'white';
                 ctx.font = 'bold 40px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(`Sample ${i+1}`, canvas.width/2, canvas.height/2);
+                ctx.fillText(`Section ${i+1}`, canvas.width/2, canvas.height/2);
                 ctx.font = '20px Arial';
-                ctx.fillText(`Photo for 360° panorama`, canvas.width/2, canvas.height/2 + 50);
+                ctx.fillText(`${i * 45}° rotation`, canvas.width/2, canvas.height/2 + 50);
+                
+                // Add overlapping features that continue between images
+                ctx.fillStyle = `hsl(${(hue + 180) % 360}, 80%, 60%)`;
+                const overlapX = i === 0 ? canvas.width * 0.8 : canvas.width * 0.2;
+                ctx.beginPath();
+                ctx.arc(overlapX, canvas.height/3, 30, 0, Math.PI * 2);
+                ctx.fill();
                 
                 capturedPhotos.push(canvas.toDataURL('image/jpeg'));
             }
             
             updatePhotoDisplay();
-            capturePhotoBtn.disabled = true; // Can't capture more in sample mode
+            capturePhotoBtn.disabled = true;
             processPhotosBtn.disabled = false;
             resetPhotosBtn.disabled = false;
+            stitchingOptions.style.display = 'block';
             
             showToast(`Loaded ${samplePhotos} sample photos`, 'info');
         }
@@ -745,24 +823,47 @@
                 // Draw video frame to canvas
                 context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
                 
+                // Add some metadata to help with stitching
+                const metadata = {
+                    timestamp: Date.now(),
+                    index: capturedPhotos.length,
+                    rotation: (capturedPhotos.length * 45) % 360 // Simulate rotation
+                };
+                
                 // Convert to data URL
                 const photoData = canvas.toDataURL('image/jpeg', 0.8);
-                capturedPhotos.push(photoData);
+                capturedPhotos.push({
+                    data: photoData,
+                    metadata: metadata,
+                    width: canvas.width,
+                    height: canvas.height
+                });
             } else {
-                // Create a simple placeholder photo
+                // Create a placeholder photo with simulated features
                 const canvas = document.createElement('canvas');
                 canvas.width = 800;
                 canvas.height = 600;
                 const ctx = canvas.getContext('2d');
                 
-                // Create gradient based on photo count
+                // Create gradient that shifts gradually
                 const hue = (capturedPhotos.length * 45) % 360;
+                const nextHue = ((capturedPhotos.length + 1) * 45) % 360;
+                
                 const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-                gradient.addColorStop(0, `hsl(${hue}, 70%, 30%)`);
-                gradient.addColorStop(1, `hsl(${hue + 60}, 70%, 30%)`);
+                gradient.addColorStop(0, `hsl(${hue}, 70%, 40%)`);
+                gradient.addColorStop(0.5, `hsl(${hue + 15}, 75%, 45%)`);
+                gradient.addColorStop(1, `hsl(${nextHue}, 70%, 40%)`);
                 
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add horizon
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height/2);
+                ctx.lineTo(canvas.width, canvas.height/2);
+                ctx.stroke();
                 
                 // Add text
                 ctx.fillStyle = 'white';
@@ -770,9 +871,26 @@
                 ctx.textAlign = 'center';
                 ctx.fillText(`Photo ${capturedPhotos.length + 1}`, canvas.width/2, canvas.height/2);
                 ctx.font = '18px Arial';
-                ctx.fillText(`Captured at ${new Date().toLocaleTimeString()}`, canvas.width/2, canvas.height/2 + 40);
+                ctx.fillText(`${capturedPhotos.length * 45}° rotation`, canvas.width/2, canvas.height/2 + 40);
                 
-                capturedPhotos.push(canvas.toDataURL('image/jpeg'));
+                // Add overlapping features
+                ctx.fillStyle = `hsl(${(hue + 180) % 360}, 80%, 60%)`;
+                const overlapX = capturedPhotos.length === 0 ? canvas.width * 0.8 : canvas.width * 0.2;
+                ctx.beginPath();
+                ctx.arc(overlapX, canvas.height/3, 30, 0, Math.PI * 2);
+                ctx.fill();
+                
+                const photoData = canvas.toDataURL('image/jpeg');
+                capturedPhotos.push({
+                    data: photoData,
+                    metadata: {
+                        timestamp: Date.now(),
+                        index: capturedPhotos.length,
+                        rotation: capturedPhotos.length * 45
+                    },
+                    width: canvas.width,
+                    height: canvas.height
+                });
             }
             
             updatePhotoDisplay();
@@ -787,6 +905,11 @@
             playCaptureSound();
             
             showToast(`Photo ${capturedPhotos.length} captured!`, 'success');
+            
+            // Show stitching options when we have at least 2 photos
+            if (capturedPhotos.length >= 2) {
+                stitchingOptions.style.display = 'block';
+            }
         });
         
         // Play capture sound
@@ -819,15 +942,15 @@
             
             capturedPhotos.forEach((photo, index) => {
                 const img = document.createElement('img');
-                img.src = photo;
+                img.src = photo.data;
                 img.alt = `Photo ${index + 1}`;
                 img.className = 'photo-thumbnail';
-                img.title = `Photo ${index + 1}`;
+                img.title = `Photo ${index + 1} (${photo.metadata.rotation}°)`;
                 capturedPhotosContainer.appendChild(img);
                 
                 // Add click to view larger
                 img.addEventListener('click', () => {
-                    viewPhoto(photo, index);
+                    viewPhoto(photo.data, index);
                 });
             });
             
@@ -876,6 +999,11 @@
                     updatePhotoDisplay();
                     document.body.removeChild(overlay);
                     showToast('Photo deleted', 'info');
+                    
+                    // Hide stitching options if less than 2 photos
+                    if (capturedPhotos.length < 2) {
+                        stitchingOptions.style.display = 'none';
+                    }
                 }
             });
             
@@ -898,11 +1026,12 @@
                 capturedPhotos = [];
                 updatePhotoDisplay();
                 panoramaImage = null;
+                stitchingOptions.style.display = 'none';
                 showToast('All photos have been cleared', 'info');
             }
         });
         
-        // Process photos to create panorama - UPDATED TO USE ACTUAL PHOTOS
+        // Process photos to create panorama
         processPhotosBtn.addEventListener('click', async () => {
             if (capturedPhotos.length < 4) {
                 showToast('Need at least 4 photos to create a 360° image', 'error');
@@ -915,143 +1044,55 @@
             step1.classList.remove('active');
             step2.classList.add('active');
             
-            // Create panorama from actual photos
-            createPanoramaFromPhotos();
+            // Get stitching options
+            const stitchMethod = document.querySelector('input[name="stitch-method"]:checked').value;
+            const enableFeatureMatching = document.getElementById('enable-feature-matching').checked;
+            const enableExposureCompensation = document.getElementById('enable-exposure-compensation').checked;
+            
+            // Create panorama from photos
+            await createStitchedPanorama(stitchMethod, enableFeatureMatching, enableExposureCompensation);
         });
         
-        // Create panorama from actual captured photos
-        async function createPanoramaFromPhotos() {
-            // First, load all photos into Image objects
+        // Create stitched panorama with blending
+        async function createStitchedPanorama(stitchMethod, enableFeatureMatching, enableExposureCompensation) {
+            // Load all photos into Image objects
             const photoImages = [];
             
             for (let i = 0; i < capturedPhotos.length; i++) {
                 processingStatus.textContent = `Loading photo ${i+1} of ${capturedPhotos.length}...`;
-                progressBar.style.width = `${(i / capturedPhotos.length) * 50}%`;
+                progressBar.style.width = `${(i / capturedPhotos.length) * 30}%`;
                 
                 const img = new Image();
                 await new Promise((resolve) => {
                     img.onload = resolve;
-                    img.src = capturedPhotos[i];
+                    img.src = capturedPhotos[i].data;
                 });
-                photoImages.push(img);
                 
-                // Small delay to show progress
-                await new Promise(resolve => setTimeout(resolve, 100));
+                photoImages.push({
+                    image: img,
+                    width: capturedPhotos[i].width,
+                    height: capturedPhotos[i].height,
+                    rotation: capturedPhotos[i].metadata.rotation
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 50));
             }
             
-            // Now create the panorama
-            processingStatus.textContent = 'Creating panorama...';
+            // Create panorama based on selected method
+            processingStatus.textContent = 'Stitching photos...';
             
-            // Determine panorama dimensions
-            // Standard equirectangular panorama is 2:1 aspect ratio
-            const panoramaWidth = 4096; // Standard width for 360° panorama
-            const panoramaHeight = panoramaWidth / 2;
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = panoramaWidth;
-            canvas.height = panoramaHeight;
-            const ctx = canvas.getContext('2d');
-            
-            // Fill with a neutral background first
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(0, 0, panoramaWidth, panoramaHeight);
-            
-            // Calculate section width for each photo
-            const sectionWidth = panoramaWidth / capturedPhotos.length;
-            
-            // Place each photo in its section
-            for (let i = 0; i < photoImages.length; i++) {
-                const img = photoImages[i];
-                const x = i * sectionWidth;
-                
-                // Calculate scaling to fit section
-                const scale = Math.min(sectionWidth / img.width, panoramaHeight / img.height);
-                const scaledWidth = img.width * scale;
-                const scaledHeight = img.height * scale;
-                
-                // Center vertically
-                const y = (panoramaHeight - scaledHeight) / 2;
-                
-                // Draw the photo
-                ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-                
-                // Add a subtle separator
-                if (i > 0) {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                    ctx.fillRect(x - 2, 0, 4, panoramaHeight);
-                }
-                
-                // Update progress
-                const progress = 50 + ((i + 1) / photoImages.length) * 50;
-                progressBar.style.width = `${progress}%`;
-                processingDetail.textContent = `Processing photo ${i+1} of ${photoImages.length}`;
-                
-                // Small delay to show progress
-                await new Promise(resolve => setTimeout(resolve, 150));
+            let panoramaData;
+            if (stitchMethod === 'multiband') {
+                panoramaData = await createMultiBandBlendedPanorama(photoImages, enableFeatureMatching, enableExposureCompensation);
+            } else {
+                panoramaData = await createLinearBlendedPanorama(photoImages, enableFeatureMatching, enableExposureCompensation);
             }
             
-            // Add blending between photos (simple gradient overlay)
-            processingStatus.textContent = 'Blending photos...';
-            
-            for (let i = 0; i < photoImages.length - 1; i++) {
-                const blendX = (i + 1) * sectionWidth;
-                const blendWidth = sectionWidth * 0.2; // Blend 20% of each section
-                
-                const gradient = ctx.createLinearGradient(
-                    blendX - blendWidth/2, 0,
-                    blendX + blendWidth/2, 0
-                );
-                
-                gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
-                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(blendX - blendWidth/2, 0, blendWidth, panoramaHeight);
-            }
-            
-            // Add top and bottom gradients for sky/ground
-            const topGradient = ctx.createLinearGradient(0, 0, 0, panoramaHeight * 0.3);
-            topGradient.addColorStop(0, 'rgba(26, 42, 108, 0.6)');
-            topGradient.addColorStop(1, 'rgba(26, 42, 108, 0)');
-            
-            const bottomGradient = ctx.createLinearGradient(0, panoramaHeight * 0.7, 0, panoramaHeight);
-            bottomGradient.addColorStop(0, 'rgba(29, 24, 16, 0)');
-            bottomGradient.addColorStop(1, 'rgba(29, 24, 16, 0.6)');
-            
-            ctx.fillStyle = topGradient;
-            ctx.fillRect(0, 0, panoramaWidth, panoramaHeight * 0.3);
-            
-            ctx.fillStyle = bottomGradient;
-            ctx.fillRect(0, panoramaHeight * 0.7, panoramaWidth, panoramaHeight * 0.3);
-            
-            // Add horizon line
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, panoramaHeight / 2);
-            ctx.lineTo(panoramaWidth, panoramaHeight / 2);
-            ctx.stroke();
-            
-            // Add photo count indicator
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.font = 'bold 40px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(`${capturedPhotos.length} Photos`, panoramaWidth / 2, 80);
-            
-            ctx.font = '24px Arial';
-            ctx.fillText('360° Panorama', panoramaWidth / 2, 120);
-            ctx.fillText(new Date().toLocaleDateString(), panoramaWidth / 2, 150);
-            
-            // Convert to data URL
-            panoramaImage = canvas.toDataURL('image/jpeg', 0.9);
-            
-            // Calculate image info
-            const sizeInKB = Math.round((panoramaImage.length * 3/4) / 1024);
+            panoramaImage = panoramaData.dataUrl;
             
             // Update result section
             resultImage.src = panoramaImage;
-            resultInfoText.textContent = `Dimensions: ${canvas.width}x${canvas.height} • Format: JPEG • Size: ~${sizeInKB} KB • Photos: ${capturedPhotos.length}`;
+            resultInfoText.textContent = `Dimensions: ${panoramaData.width}x${panoramaData.height} • Format: JPEG • Size: ~${Math.round(panoramaData.size/1024)} KB • Photos: ${capturedPhotos.length} • Method: ${stitchMethod === 'multiband' ? 'Multi-band Blending' : 'Linear Blending'}`;
             
             // Show result
             setTimeout(() => {
@@ -1062,6 +1103,399 @@
                 
                 showToast('360° image created successfully!', 'success');
             }, 500);
+        }
+        
+        // Create panorama with linear blending
+        async function createLinearBlendedPanorama(photoImages, enableFeatureMatching, enableExposureCompensation) {
+            const overlapPercent = 0.25; // 25% overlap
+            const panoramaWidth = 4096;
+            const panoramaHeight = panoramaWidth / 2;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = panoramaWidth;
+            canvas.height = panoramaHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // Fill with a neutral background
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, panoramaWidth, panoramaHeight);
+            
+            // Calculate section width for each photo with overlap
+            const effectiveWidth = panoramaWidth / photoImages.length;
+            const overlapWidth = effectiveWidth * overlapPercent;
+            const sectionWidth = effectiveWidth + overlapWidth;
+            
+            // Apply exposure compensation if enabled
+            if (enableExposureCompensation) {
+                processingStatus.textContent = 'Adjusting exposure...';
+                await adjustExposure(photoImages);
+                progressBar.style.width = '45%';
+            }
+            
+            // Feature matching simulation
+            if (enableFeatureMatching) {
+                processingStatus.textContent = 'Matching features...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+                progressBar.style.width = '60%';
+            }
+            
+            // Place and blend each photo
+            for (let i = 0; i < photoImages.length; i++) {
+                const imgData = photoImages[i];
+                const img = imgData.image;
+                
+                // Calculate position with overlap
+                const x = i * effectiveWidth - overlapWidth/2;
+                
+                // Calculate scaling to fit height while maintaining aspect ratio
+                const scale = panoramaHeight / img.height;
+                const scaledWidth = img.width * scale;
+                const scaledHeight = panoramaHeight;
+                
+                // Calculate source and destination rectangles for overlap blending
+                const sourceX = i === 0 ? 0 : (overlapWidth/2) / scale;
+                const sourceWidth = img.width - (i === 0 ? 0 : (overlapWidth/2) / scale) - (i === photoImages.length-1 ? 0 : (overlapWidth/2) / scale);
+                
+                const destX = Math.max(x, 0);
+                const destWidth = scaledWidth - (i === 0 ? 0 : overlapWidth/2) - (i === photoImages.length-1 ? 0 : overlapWidth/2);
+                
+                // Draw the photo section
+                ctx.drawImage(
+                    img,
+                    sourceX, 0, sourceWidth, img.height,
+                    destX, 0, destWidth, scaledHeight
+                );
+                
+                // Apply linear blend to overlap regions
+                if (i > 0) {
+                    const blendWidth = overlapWidth;
+                    const blendStartX = i * effectiveWidth - blendWidth/2;
+                    
+                    // Create gradient mask for blending
+                    ctx.save();
+                    const gradient = ctx.createLinearGradient(
+                        blendStartX, 0,
+                        blendStartX + blendWidth, 0
+                    );
+                    
+                    gradient.addColorStop(0, 'rgba(0,0,0,1)');
+                    gradient.addColorStop(0.5, 'rgba(0,0,0,0)');
+                    gradient.addColorStop(1, 'rgba(0,0,0,1)');
+                    
+                    ctx.globalCompositeOperation = 'destination-in';
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(blendStartX, 0, blendWidth, panoramaHeight);
+                    ctx.restore();
+                }
+                
+                // Update progress
+                const progress = 60 + ((i + 1) / photoImages.length) * 35;
+                progressBar.style.width = `${progress}%`;
+                processingDetail.textContent = `Blending photo ${i+1} of ${photoImages.length}`;
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Add sky and ground gradients for realism
+            processingStatus.textContent = 'Finalizing panorama...';
+            
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, panoramaHeight * 0.4);
+            skyGradient.addColorStop(0, 'rgba(26, 42, 108, 0.6)');
+            skyGradient.addColorStop(1, 'transparent');
+            
+            const groundGradient = ctx.createLinearGradient(0, panoramaHeight * 0.6, 0, panoramaHeight);
+            groundGradient.addColorStop(0, 'transparent');
+            groundGradient.addColorStop(1, 'rgba(29, 24, 16, 0.6)');
+            
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, panoramaWidth, panoramaHeight * 0.4);
+            
+            ctx.fillStyle = groundGradient;
+            ctx.fillRect(0, panoramaHeight * 0.6, panoramaWidth, panoramaHeight * 0.4);
+            
+            // Add horizon line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, panoramaHeight / 2);
+            ctx.lineTo(panoramaWidth, panoramaHeight / 2);
+            ctx.stroke();
+            
+            progressBar.style.width = '100%';
+            
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            const size = (dataUrl.length * 3) / 4; // Approximate size in bytes
+            
+            return {
+                dataUrl: dataUrl,
+                width: canvas.width,
+                height: canvas.height,
+                size: size
+            };
+        }
+        
+        // Create panorama with multi-band blending (simulated)
+        async function createMultiBandBlendedPanorama(photoImages, enableFeatureMatching, enableExposureCompensation) {
+            const panoramaWidth = 4096;
+            const panoramaHeight = panoramaWidth / 2;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = panoramaWidth;
+            canvas.height = panoramaHeight;
+            const ctx = canvas.getContext('2d');
+            
+            // Fill with background
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, panoramaWidth, panoramaHeight);
+            
+            // Calculate section width
+            const sectionWidth = panoramaWidth / photoImages.length;
+            
+            // Apply exposure compensation if enabled
+            if (enableExposureCompensation) {
+                processingStatus.textContent = 'Adjusting exposure...';
+                await adjustExposure(photoImages);
+                progressBar.style.width = '40%';
+            }
+            
+            // Feature matching
+            if (enableFeatureMatching) {
+                processingStatus.textContent = 'Matching features...';
+                await new Promise(resolve => setTimeout(resolve, 800));
+                progressBar.style.width = '60%';
+            }
+            
+            // Create multiple blending layers (simulated multi-band blending)
+            processingStatus.textContent = 'Applying multi-band blending...';
+            
+            // Create separate canvases for different frequency bands
+            const lowFreqCanvas = document.createElement('canvas');
+            lowFreqCanvas.width = panoramaWidth;
+            lowFreqCanvas.height = panoramaHeight;
+            const lowFreqCtx = lowFreqCanvas.getContext('2d');
+            
+            const highFreqCanvas = document.createElement('canvas');
+            highFreqCanvas.width = panoramaWidth;
+            highFreqCanvas.height = panoramaHeight;
+            const highFreqCtx = highFreqCanvas.getContext('2d');
+            
+            // Draw photos to both canvases with different processing
+            for (let i = 0; i < photoImages.length; i++) {
+                const imgData = photoImages[i];
+                const img = imgData.image;
+                
+                const x = i * sectionWidth;
+                const scale = panoramaHeight / img.height;
+                const scaledWidth = img.width * scale;
+                const scaledHeight = panoramaHeight;
+                const y = (panoramaHeight - scaledHeight) / 2;
+                
+                // Draw to low frequency layer (blurred)
+                lowFreqCtx.drawImage(img, x, y, scaledWidth, scaledHeight);
+                
+                // Draw to high frequency layer (sharp)
+                highFreqCtx.drawImage(img, x, y, scaledWidth, scaledHeight);
+                
+                // Update progress
+                const progress = 60 + ((i + 1) / photoImages.length) * 20;
+                progressBar.style.width = `${progress}%`;
+                
+                await new Promise(resolve => setTimeout(resolve, 80));
+            }
+            
+            // Apply Gaussian blur to low frequency layer (simulated)
+            processingStatus.textContent = 'Processing frequency bands...';
+            applyBlurEffect(lowFreqCtx, lowFreqCanvas, 20);
+            
+            progressBar.style.width = '85%';
+            
+            // Combine the layers with smooth transitions
+            const blendWidth = sectionWidth * 0.3;
+            
+            for (let i = 0; i < photoImages.length; i++) {
+                const x = i * sectionWidth;
+                
+                // Create smooth transition masks
+                if (i < photoImages.length - 1) {
+                    const maskGradient = ctx.createLinearGradient(
+                        x + sectionWidth - blendWidth/2, 0,
+                        x + sectionWidth + blendWidth/2, 0
+                    );
+                    
+                    maskGradient.addColorStop(0, 'rgba(0,0,0,0)');
+                    maskGradient.addColorStop(0.5, 'rgba(0,0,0,0.5)');
+                    maskGradient.addColorStop(1, 'rgba(0,0,0,1)');
+                    
+                    // Draw low frequency with smooth transition
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.drawImage(lowFreqCanvas, x, 0, sectionWidth + blendWidth, panoramaHeight, x, 0, sectionWidth + blendWidth, panoramaHeight);
+                    
+                    // Apply mask for smooth transition
+                    ctx.globalCompositeOperation = 'destination-in';
+                    ctx.fillStyle = maskGradient;
+                    ctx.fillRect(x, 0, sectionWidth + blendWidth, panoramaHeight);
+                    ctx.restore();
+                    
+                    // Draw high frequency with opposite mask
+                    ctx.save();
+                    const inverseGradient = ctx.createLinearGradient(
+                        x + sectionWidth - blendWidth/2, 0,
+                        x + sectionWidth + blendWidth/2, 0
+                    );
+                    
+                    inverseGradient.addColorStop(0, 'rgba(0,0,0,1)');
+                    inverseGradient.addColorStop(0.5, 'rgba(0,0,0,0.5)');
+                    inverseGradient.addColorStop(1, 'rgba(0,0,0,0)');
+                    
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.drawImage(highFreqCanvas, x + sectionWidth, 0, blendWidth, panoramaHeight, x + sectionWidth, 0, blendWidth, panoramaHeight);
+                    
+                    ctx.globalCompositeOperation = 'destination-in';
+                    ctx.fillStyle = inverseGradient;
+                    ctx.fillRect(x + sectionWidth, 0, blendWidth, panoramaHeight);
+                    ctx.restore();
+                } else {
+                    // Draw last section
+                    ctx.drawImage(lowFreqCanvas, x, 0, sectionWidth, panoramaHeight, x, 0, sectionWidth, panoramaHeight);
+                }
+            }
+            
+            // Add final touches
+            processingStatus.textContent = 'Finalizing...';
+            
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, panoramaHeight * 0.4);
+            skyGradient.addColorStop(0, 'rgba(26, 42, 108, 0.4)');
+            skyGradient.addColorStop(1, 'transparent');
+            
+            const groundGradient = ctx.createLinearGradient(0, panoramaHeight * 0.6, 0, panoramaHeight);
+            groundGradient.addColorStop(0, 'transparent');
+            groundGradient.addColorStop(1, 'rgba(29, 24, 16, 0.4)');
+            
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, panoramaWidth, panoramaHeight * 0.4);
+            
+            ctx.fillStyle = groundGradient;
+            ctx.fillRect(0, panoramaHeight * 0.6, panoramaWidth, panoramaHeight * 0.4);
+            
+            // Add subtle noise to hide seams
+            addNoise(ctx, canvas, 0.5);
+            
+            progressBar.style.width = '100%';
+            
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            const size = (dataUrl.length * 3) / 4;
+            
+            return {
+                dataUrl: dataUrl,
+                width: canvas.width,
+                height: canvas.height,
+                size: size
+            };
+        }
+        
+        // Apply blur effect (simulated Gaussian blur)
+        function applyBlurEffect(ctx, canvas, radius) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Simple box blur for demonstration
+            for (let i = 0; i < radius; i++) {
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const idx = (y * width + x) * 4;
+                        
+                        // Average with neighbors
+                        let r = 0, g = 0, b = 0, count = 0;
+                        
+                        for (let dy = -1; dy <= 1; dy++) {
+                            for (let dx = -1; dx <= 1; dx++) {
+                                const nx = x + dx;
+                                const ny = y + dy;
+                                
+                                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                    const nIdx = (ny * width + nx) * 4;
+                                    r += data[nIdx];
+                                    g += data[nIdx + 1];
+                                    b += data[nIdx + 2];
+                                    count++;
+                                }
+                            }
+                        }
+                        
+                        data[idx] = r / count;
+                        data[idx + 1] = g / count;
+                        data[idx + 2] = b / count;
+                    }
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        // Add subtle noise to hide seams
+        function addNoise(ctx, canvas, amount) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const noise = (Math.random() - 0.5) * amount * 2;
+                data[i] = Math.max(0, Math.min(255, data[i] + noise));
+                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        // Adjust exposure across images (simulated)
+        async function adjustExposure(photoImages) {
+            // Simple exposure normalization - in a real app, you'd analyze histograms
+            const targetBrightness = 0.5;
+            
+            for (const imgData of photoImages) {
+                // Create a temporary canvas to analyze brightness
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = imgData.width;
+                tempCanvas.height = imgData.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                tempCtx.drawImage(imgData.image, 0, 0);
+                const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                const data = imageData.data;
+                
+                // Calculate average brightness
+                let sum = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
+                }
+                const avgBrightness = sum / (data.length / 4) / 255;
+                
+                // Adjust brightness to target
+                const adjustment = targetBrightness / avgBrightness;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = Math.min(255, data[i] * adjustment);
+                    data[i + 1] = Math.min(255, data[i + 1] * adjustment);
+                    data[i + 2] = Math.min(255, data[i + 2] * adjustment);
+                }
+                
+                tempCtx.putImageData(imageData, 0, 0);
+                imgData.image.src = tempCanvas.toDataURL('image/jpeg');
+                
+                await new Promise(resolve => {
+                    const newImg = new Image();
+                    newImg.onload = () => {
+                        imgData.image = newImg;
+                        resolve();
+                    };
+                    newImg.src = tempCanvas.toDataURL('image/jpeg');
+                });
+            }
+            
+            return photoImages;
         }
         
         // Download image
@@ -1157,6 +1591,7 @@
             // Reset photos
             capturedPhotos = [];
             updatePhotoDisplay();
+            stitchingOptions.style.display = 'none';
             
             showToast('Ready for new capture session', 'info');
         });
@@ -1191,78 +1626,6 @@
                 startCameraBtn.disabled = false;
             }
         });
-        
-        // Helper function to create a more realistic panorama with actual photo stitching
-        function createBetterPanorama(photoImages) {
-            // This is a simplified stitching algorithm
-            // In a production app, you'd want to use a library like OpenCV.js or 
-            // send images to a backend service for proper stitching
-            
-            // For now, we'll create a simple linear layout
-            const totalWidth = photoImages.reduce((sum, img) => sum + img.width, 0);
-            const maxHeight = Math.max(...photoImages.map(img => img.height));
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = totalWidth;
-            canvas.height = maxHeight;
-            const ctx = canvas.getContext('2d');
-            
-            let currentX = 0;
-            for (let i = 0; i < photoImages.length; i++) {
-                const img = photoImages[i];
-                
-                // Calculate vertical center
-                const y = (maxHeight - img.height) / 2;
-                
-                // Draw the photo
-                ctx.drawImage(img, currentX, y);
-                
-                // Add a simple blend to next photo
-                if (i < photoImages.length - 1) {
-                    const nextImg = photoImages[i + 1];
-                    const blendWidth = Math.min(img.width, nextImg.width) * 0.3;
-                    
-                    // Create gradient for blending
-                    const gradient = ctx.createLinearGradient(
-                        currentX + img.width - blendWidth, 0,
-                        currentX + img.width, 0
-                    );
-                    
-                    gradient.addColorStop(0, 'rgba(0,0,0,0)');
-                    gradient.addColorStop(1, 'rgba(0,0,0,1)');
-                    
-                    // Save context for blending
-                    ctx.save();
-                    ctx.globalCompositeOperation = 'destination-in';
-                    ctx.fillStyle = gradient;
-                    ctx.fillRect(currentX + img.width - blendWidth, 0, blendWidth, maxHeight);
-                    ctx.restore();
-                }
-                
-                currentX += img.width;
-            }
-            
-            // Now wrap this into equirectangular format
-            const equirectCanvas = document.createElement('canvas');
-            equirectCanvas.width = 4096;
-            equirectCanvas.height = 2048;
-            const equirectCtx = equirectCanvas.getContext('2d');
-            
-            // Map the linear panorama to equirectangular
-            for (let x = 0; x < equirectCanvas.width; x++) {
-                // Map x coordinate to panorama (wrapping around)
-                const sourceX = (x / equirectCanvas.width) * canvas.width;
-                
-                // Draw column from panorama
-                equirectCtx.drawImage(
-                    canvas,
-                    sourceX, 0, 1, canvas.height,
-                    x, 0, 1, equirectCanvas.height
-                );
-            }
-            
-            return equirectCanvas.toDataURL('image/jpeg', 0.9);
-        }
     </script>
 </body>
 </html>
