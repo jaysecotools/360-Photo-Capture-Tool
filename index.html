@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>360° Photo Capture Tool</title>
     <style>
-        /* Keep all your existing CSS styles */
         * {
             margin: 0;
             padding: 0;
@@ -76,7 +75,6 @@
             font-size: 1.2rem;
         }
         
-        /* Camera Section */
         .camera-container {
             width: 100%;
             max-width: 600px;
@@ -113,7 +111,6 @@
             color: #4facfe;
         }
         
-        /* Controls */
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -167,16 +164,11 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
         
-        .button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        
         .button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
         
-        /* Photo Grid */
         .photo-counter {
             text-align: center;
             margin-top: 15px;
@@ -199,6 +191,7 @@
             object-fit: cover;
             border: 2px solid rgba(79, 172, 254, 0.5);
             transition: all 0.3s ease;
+            cursor: pointer;
         }
         
         .photo-thumbnail:hover {
@@ -206,7 +199,11 @@
             border-color: #4facfe;
         }
         
-        /* Processing Section */
+        .photo-thumbnail.active {
+            border-color: #00b4d8;
+            box-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+        }
+        
         .processing-container {
             display: none;
             text-align: center;
@@ -246,29 +243,146 @@
             transition: width 0.3s ease;
         }
         
-        /* Instructions */
-        .instructions {
-            background: rgba(0, 0, 0, 0.2);
+        /* Manual Alignment Section */
+        .alignment-container {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .alignment-canvas-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: #000;
             border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
+            overflow: hidden;
+            margin: 20px 0;
         }
         
-        .instructions h3 {
-            color: #00b4d8;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
+        #alignment-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: move;
         }
         
-        .instructions ol {
-            padding-left: 20px;
-            margin-bottom: 15px;
+        .alignment-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
         }
         
-        .instructions li {
+        .alignment-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .slider-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
             margin-bottom: 10px;
-            line-height: 1.5;
-            font-size: 0.95rem;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00b4d8;
+            cursor: pointer;
+        }
+        
+        .result-container {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .result-image {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 3px solid #00b4d8;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .result-info {
+            background: rgba(0, 180, 216, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease;
+            max-width: 300px;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: rgba(42, 157, 143, 0.9);
+            color: white;
+        }
+        
+        .toast.error {
+            background: rgba(230, 57, 70, 0.9);
+            color: white;
+        }
+        
+        .toast.info {
+            background: rgba(0, 180, 216, 0.9);
+            color: white;
         }
         
         .step-indicator {
@@ -329,100 +443,6 @@
             font-weight: bold;
         }
         
-        /* Result Section */
-        .result-container {
-            display: none;
-            text-align: center;
-            padding: 30px;
-        }
-        
-        .result-image {
-            max-width: 100%;
-            border-radius: 10px;
-            border: 3px solid #00b4d8;
-            margin: 20px 0;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        
-        .result-info {
-            background: rgba(0, 180, 216, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: left;
-        }
-        
-        /* Overlay */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .overlay h2 {
-            color: #00b4d8;
-            margin-bottom: 20px;
-        }
-        
-        .overlay p {
-            max-width: 500px;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
-        .overlay-buttons {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        /* Toast Messages */
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-weight: 600;
-            z-index: 1000;
-            opacity: 0;
-            transform: translateX(100%);
-            transition: all 0.5s ease;
-            max-width: 300px;
-        }
-        
-        .toast.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        
-        .toast.success {
-            background: rgba(42, 157, 143, 0.9);
-            color: white;
-        }
-        
-        .toast.error {
-            background: rgba(230, 57, 70, 0.9);
-            color: white;
-        }
-        
-        .toast.info {
-            background: rgba(0, 180, 216, 0.9);
-            color: white;
-        }
-        
-        /* Responsive */
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.5rem;
@@ -443,60 +463,20 @@
                 height: 70px;
             }
             
-            .step-label {
-                font-size: 0.7rem;
+            .alignment-canvas-container {
+                height: 300px;
             }
-        }
-        
-        @media (max-width: 480px) {
-            .button {
-                width: 100%;
-                max-width: 300px;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .photo-thumbnail {
-                width: 60px;
-                height: 60px;
-            }
-        }
-        
-        /* Warning Banner */
-        .warning-banner {
-            background: linear-gradient(90deg, #e63946, #d00000);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            text-align: center;
-            display: none;
-        }
-        
-        .warning-banner i {
-            margin-right: 10px;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- OpenCV.js for feature detection and image stitching -->
-    <script async src="https://docs.opencv.org/master/opencv.js" type="text/javascript"></script>
 </head>
 <body>
     <div class="header">
         <h1><i class="fas fa-camera"></i> 360° Photo Capture Tool</h1>
-        <p class="subtitle">Capture photos and create a panoramic image for use in your 360° Marker Tool</p>
+        <p class="subtitle">Capture photos and manually align them to create a panoramic image</p>
     </div>
     
     <div class="main-container">
-        <!-- Warning Banner -->
-        <div class="warning-banner" id="opencv-warning">
-            <i class="fas fa-exclamation-triangle"></i>
-            Loading OpenCV library for advanced image stitching. This may take a moment...
-        </div>
-        
         <!-- Step Indicator -->
         <div class="step-indicator">
             <div class="step active" id="step1">
@@ -505,7 +485,7 @@
             </div>
             <div class="step" id="step2">
                 <div class="step-number">2</div>
-                <div class="step-label">Process</div>
+                <div class="step-label">Align</div>
             </div>
             <div class="step" id="step3">
                 <div class="step-number">3</div>
@@ -513,7 +493,7 @@
             </div>
         </div>
         
-        <!-- Camera Section -->
+        <!-- Capture Section -->
         <div class="section" id="capture-section">
             <h2><i class="fas fa-camera"></i> Capture Photos</h2>
             
@@ -547,9 +527,70 @@
             </div>
             
             <div class="controls" style="margin-top: 30px;">
-                <button id="process-photos" class="button success-btn" disabled>
-                    <i class="fas fa-magic"></i> Create 360° Image
+                <button id="align-photos" class="button success-btn" disabled>
+                    <i class="fas fa-align-center"></i> Align Photos
                 </button>
+            </div>
+        </div>
+        
+        <!-- Alignment Section -->
+        <div class="section alignment-container" id="alignment-section">
+            <h2><i class="fas fa-sliders-h"></i> Align Photos</h2>
+            <p>Drag the current photo to align it with the previous one. Use the controls to adjust positioning.</p>
+            
+            <div class="alignment-canvas-container">
+                <canvas id="alignment-canvas"></canvas>
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Horizontal Offset</span>
+                    <span id="x-offset-value">0</span>
+                </div>
+                <input type="range" id="x-offset" class="alignment-slider" min="-200" max="200" value="0">
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Vertical Offset</span>
+                    <span id="y-offset-value">0</span>
+                </div>
+                <input type="range" id="y-offset" class="alignment-slider" min="-100" max="100" value="0">
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Rotation</span>
+                    <span id="rotation-value">0°</span>
+                </div>
+                <input type="range" id="rotation" class="alignment-slider" min="-15" max="15" value="0">
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Opacity</span>
+                    <span id="opacity-value">50%</span>
+                </div>
+                <input type="range" id="opacity" class="alignment-slider" min="0" max="100" value="50">
+            </div>
+            
+            <div class="alignment-controls">
+                <button id="prev-photo" class="button secondary-btn">
+                    <i class="fas fa-arrow-left"></i> Previous Photo
+                </button>
+                <button id="next-photo" class="button primary-btn">
+                    Next Photo <i class="fas fa-arrow-right"></i>
+                </button>
+                <button id="apply-alignment" class="button success-btn">
+                    <i class="fas fa-check"></i> Apply Alignment
+                </button>
+                <button id="cancel-alignment" class="button danger-btn">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+            
+            <div class="photo-counter">
+                Aligning photo <span id="current-photo-index">1</span> of <span id="total-photos">0</span>
             </div>
         </div>
         
@@ -557,17 +598,15 @@
         <div class="section processing-container" id="processing-section">
             <h2><i class="fas fa-cogs"></i> Creating 360° Image</h2>
             <div class="loader"></div>
-            <p id="processing-status">Loading OpenCV library...</p>
+            <p id="processing-status">Processing images...</p>
             <div class="progress-bar">
                 <div class="progress" id="progress-bar"></div>
             </div>
-            <p id="processing-detail">Advanced stitching in progress. This may take a moment.</p>
         </div>
         
         <!-- Result Section -->
         <div class="section result-container" id="result-section">
             <h2><i class="fas fa-check-circle"></i> 360° Image Created!</h2>
-            <p>Your panoramic image is ready for use in the 360° Marker Tool</p>
             
             <div id="result-image-container">
                 <img id="result-image" class="result-image" alt="360° Panorama">
@@ -582,27 +621,23 @@
                 <button id="download-image" class="button primary-btn">
                     <i class="fas fa-download"></i> Download Image
                 </button>
-                <button id="use-in-tool" class="button success-btn">
-                    <i class="fas fa-external-link-alt"></i> Open in Marker Tool
-                </button>
                 <button id="new-capture" class="button secondary-btn">
-                    <i class="fas fa-redo"></i> Capture New Photos
+                    <i class="fas fa-redo"></i> New Capture
                 </button>
             </div>
         </div>
         
         <!-- Instructions -->
-        <div class="instructions">
-            <h3><i class="fas fa-graduation-cap"></i> How to Capture a Perfect 360° Image</h3>
+        <div class="section instructions">
+            <h3><i class="fas fa-graduation-cap"></i> How to Create a Perfect 360° Panorama</h3>
             <ol>
-                <li><strong>Use a tripod or steady surface</strong> - Keep your phone at the same height</li>
-                <li><strong>Stand in one spot</strong> - Rotate your body, don't move your feet</li>
-                <li><strong>Capture 8-12 photos</strong> - Take photos every 30-45 degrees</li>
-                <li><strong>Overlap photos by 25-30%</strong> - Ensure each photo overlaps with the previous</li>
-                <li><strong>Consistent lighting</strong> - Avoid changing light conditions</li>
-                <li><strong>Keep horizon level</strong> - Try to keep the camera at the same angle</li>
+                <li><strong>Capture with overlap</strong> - Each photo should overlap the previous by 25-30%</li>
+                <li><strong>Use manual alignment</strong> - Drag each photo to match features with the previous one</li>
+                <li><strong>Adjust carefully</strong> - Use the sliders to fine-tune position, rotation, and opacity</li>
+                <li><strong>Check alignment</strong> - Toggle opacity to see how photos line up</li>
+                <li><strong>Apply blending</strong> - The final image will have smooth transitions between photos</li>
             </ol>
-            <p><strong>Note:</strong> This tool uses OpenCV.js for professional-grade image stitching. The first time may take longer to load the library.</p>
+            <p><strong>Note:</strong> This tool requires manual alignment for best results. For automatic stitching, consider using specialized software like Photoshop, Hugin, or Microsoft Image Composite Editor.</p>
         </div>
     </div>
     
@@ -610,8 +645,7 @@
     <div class="overlay" id="permission-overlay" style="display: none;">
         <h2><i class="fas fa-camera"></i> Camera Access Required</h2>
         <p>This app needs access to your camera to capture photos for creating 360° panoramic images.</p>
-        <p>Your photos are processed locally in your browser and are never uploaded to any server.</p>
-        <div class="overlay-buttons">
+        <div class="controls">
             <button id="grant-permission" class="button primary-btn">
                 <i class="fas fa-check"></i> Allow Camera Access
             </button>
@@ -631,25 +665,40 @@
         const startCameraBtn = document.getElementById('start-camera');
         const capturePhotoBtn = document.getElementById('capture-photo');
         const resetPhotosBtn = document.getElementById('reset-photos');
-        const processPhotosBtn = document.getElementById('process-photos');
+        const alignPhotosBtn = document.getElementById('align-photos');
         const downloadImageBtn = document.getElementById('download-image');
-        const useInToolBtn = document.getElementById('use-in-tool');
         const newCaptureBtn = document.getElementById('new-capture');
         const photoCount = document.getElementById('photo-count');
         const capturedPhotosContainer = document.getElementById('captured-photos');
         const processingSection = document.getElementById('processing-section');
         const resultSection = document.getElementById('result-section');
         const captureSection = document.getElementById('capture-section');
+        const alignmentSection = document.getElementById('alignment-section');
         const progressBar = document.getElementById('progress-bar');
         const processingStatus = document.getElementById('processing-status');
-        const processingDetail = document.getElementById('processing-detail');
         const resultImage = document.getElementById('result-image');
         const resultInfoText = document.getElementById('result-info-text');
         const toast = document.getElementById('toast');
         const permissionOverlay = document.getElementById('permission-overlay');
         const grantPermissionBtn = document.getElementById('grant-permission');
         const skipCameraBtn = document.getElementById('skip-camera');
-        const opencvWarning = document.getElementById('opencv-warning');
+        
+        // Alignment elements
+        const alignmentCanvas = document.getElementById('alignment-canvas');
+        const xOffsetSlider = document.getElementById('x-offset');
+        const yOffsetSlider = document.getElementById('y-offset');
+        const rotationSlider = document.getElementById('rotation');
+        const opacitySlider = document.getElementById('opacity');
+        const xOffsetValue = document.getElementById('x-offset-value');
+        const yOffsetValue = document.getElementById('y-offset-value');
+        const rotationValue = document.getElementById('rotation-value');
+        const opacityValue = document.getElementById('opacity-value');
+        const prevPhotoBtn = document.getElementById('prev-photo');
+        const nextPhotoBtn = document.getElementById('next-photo');
+        const applyAlignmentBtn = document.getElementById('apply-alignment');
+        const cancelAlignmentBtn = document.getElementById('cancel-alignment');
+        const currentPhotoIndex = document.getElementById('current-photo-index');
+        const totalPhotos = document.getElementById('total-photos');
         
         // Step indicators
         const step1 = document.getElementById('step1');
@@ -660,30 +709,20 @@
         let stream = null;
         let capturedPhotos = [];
         let panoramaImage = null;
-        let opencvLoaded = false;
+        let alignmentData = [];
+        let currentAlignmentIndex = 1;
+        let alignmentCtx = null;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let currentOffsetX = 0;
+        let currentOffsetY = 0;
         
-        // Check OpenCV loading status
-        function checkOpenCVLoaded() {
-            if (typeof cv !== 'undefined') {
-                opencvLoaded = true;
-                opencvWarning.style.display = 'none';
-                showToast('OpenCV loaded successfully', 'success');
-            } else {
-                setTimeout(checkOpenCVLoaded, 1000);
-            }
-        }
-        
-        // Initialize - Show permission overlay
+        // Initialize
         window.addEventListener('load', () => {
-            // Show OpenCV loading warning
-            opencvWarning.style.display = 'block';
-            
-            // Check for OpenCV
-            checkOpenCVLoaded();
-            
             setTimeout(() => {
                 permissionOverlay.style.display = 'flex';
-            }, 1000);
+            }, 500);
         });
         
         // Grant camera permission
@@ -698,106 +737,72 @@
             loadSamplePhotos();
         });
         
-        // Load sample photos for testing
+        // Load sample photos
         function loadSamplePhotos() {
-            const samplePhotos = 8;
             capturedPhotos = [];
             
-            // Create a consistent background for testing
-            const baseHue = 210; // Blue-ish base
-            
-            for (let i = 0; i < samplePhotos; i++) {
+            // Create 6 sample photos with overlapping content
+            for (let i = 0; i < 6; i++) {
                 const canvas = document.createElement('canvas');
                 canvas.width = 800;
                 canvas.height = 600;
                 const ctx = canvas.getContext('2d');
                 
-                // Create overlapping scene
-                const offset = i * 100; // Each photo shifts 100 pixels to simulate rotation
+                // Background that shifts gradually
+                const hue = 210 + (i * 10);
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                gradient.addColorStop(0, `hsl(${hue}, 70%, 50%)`);
+                gradient.addColorStop(1, `hsl(${hue + 20}, 70%, 50%)`);
                 
-                // Sky with gradient that shifts
-                const skyGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-                const hue1 = (baseHue + i * 5) % 360;
-                const hue2 = (baseHue + i * 5 + 10) % 360;
-                skyGradient.addColorStop(0, `hsl(${hue1}, 80%, 70%)`);
-                skyGradient.addColorStop(1, `hsl(${hue2}, 80%, 70%)`);
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                ctx.fillStyle = skyGradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
-                
-                // Ground
-                const groundGradient = ctx.createLinearGradient(0, canvas.height / 2, canvas.width, canvas.height / 2);
-                groundGradient.addColorStop(0, `hsl(${40 + i * 2}, 60%, 30%)`);
-                groundGradient.addColorStop(1, `hsl(${50 + i * 2}, 60%, 30%)`);
-                
-                ctx.fillStyle = groundGradient;
-                ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
-                
-                // Horizon line
+                // Add horizon
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(0, canvas.height / 2);
-                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.moveTo(0, canvas.height/2);
+                ctx.lineTo(canvas.width, canvas.height/2);
                 ctx.stroke();
                 
-                // Add overlapping features (trees/buildings that appear in multiple photos)
-                const treeX = canvas.width * 0.7 - offset;
-                if (treeX > -50 && treeX < canvas.width + 50) {
-                    // Tree trunk
-                    ctx.fillStyle = `hsl(${30 + i * 3}, 70%, 25%)`;
-                    ctx.fillRect(treeX - 10, canvas.height / 2, 20, 100);
-                    
-                    // Tree leaves
-                    ctx.beginPath();
-                    ctx.arc(treeX, canvas.height / 2 - 30, 40, 0, Math.PI * 2);
-                    ctx.fillStyle = `hsl(${120 + i * 5}, 80%, 30%)`;
-                    ctx.fill();
-                }
-                
-                // Another overlapping feature
-                const buildingX = canvas.width * 0.3 - offset + 50;
-                if (buildingX > -50 && buildingX < canvas.width + 50) {
-                    ctx.fillStyle = `hsl(${200 + i * 3}, 60%, 40%)`;
-                    ctx.fillRect(buildingX - 30, canvas.height / 2, 60, 150);
-                    
-                    // Windows
-                    ctx.fillStyle = 'hsl(50, 80%, 70%)';
-                    for (let w = 0; w < 2; w++) {
-                        for (let h = 0; h < 3; h++) {
-                            ctx.fillRect(buildingX - 20 + w * 25, canvas.height / 2 + 20 + h * 35, 15, 20);
-                        }
-                    }
-                }
-                
-                // Text
+                // Add text
                 ctx.fillStyle = 'white';
-                ctx.font = 'bold 30px Arial';
+                ctx.font = 'bold 40px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(`Photo ${i + 1}`, canvas.width / 2, canvas.height / 2 - 100);
-                ctx.font = '18px Arial';
-                ctx.fillText(`${i * 45}° rotation`, canvas.width / 2, canvas.height / 2 - 60);
+                ctx.fillText(`Photo ${i+1}`, canvas.width/2, canvas.height/2 - 50);
+                
+                // Add overlapping object that moves across photos
+                const objectX = 600 - (i * 120);
+                if (objectX > -50 && objectX < canvas.width + 50) {
+                    ctx.fillStyle = '#e63946';
+                    ctx.beginPath();
+                    ctx.arc(objectX, canvas.height/2, 40, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Align me!', objectX, canvas.height/2 + 60);
+                }
                 
                 capturedPhotos.push({
                     data: canvas.toDataURL('image/jpeg', 0.9),
                     width: canvas.width,
-                    height: canvas.height,
-                    index: i
+                    height: canvas.height
                 });
             }
             
             updatePhotoDisplay();
             capturePhotoBtn.disabled = true;
-            processPhotosBtn.disabled = false;
+            alignPhotosBtn.disabled = false;
             resetPhotosBtn.disabled = false;
             
-            showToast(`Loaded ${samplePhotos} sample photos with overlapping features`, 'info');
+            showToast(`Loaded ${capturedPhotos.length} sample photos`, 'info');
         }
         
         // Start camera
         startCameraBtn.addEventListener('click', async () => {
             try {
-                // Request camera access
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: { 
                         facingMode: 'environment',
@@ -807,7 +812,6 @@
                     audio: false
                 });
                 
-                // Show camera feed
                 cameraView.srcObject = stream;
                 cameraView.style.display = 'block';
                 cameraPlaceholder.style.display = 'none';
@@ -816,10 +820,8 @@
                 
                 showToast('Camera started successfully', 'success');
             } catch (error) {
-                console.error('Error accessing camera:', error);
+                console.error('Camera error:', error);
                 showToast(`Camera error: ${error.message}`, 'error');
-                
-                // If camera fails, load sample photos
                 loadSamplePhotos();
                 startCameraBtn.disabled = true;
                 startCameraBtn.innerHTML = '<i class="fas fa-ban"></i> Camera Unavailable';
@@ -840,15 +842,12 @@
                 canvas.height = cameraView.videoHeight;
                 const context = canvas.getContext('2d');
                 
-                // Draw video frame to canvas
                 context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
                 
-                const photoData = canvas.toDataURL('image/jpeg', 0.8);
                 capturedPhotos.push({
-                    data: photoData,
+                    data: canvas.toDataURL('image/jpeg', 0.8),
                     width: canvas.width,
-                    height: canvas.height,
-                    index: capturedPhotos.length
+                    height: canvas.height
                 });
             } else {
                 // Create placeholder
@@ -857,32 +856,19 @@
                 canvas.height = 600;
                 const ctx = canvas.getContext('2d');
                 
-                const hue = (capturedPhotos.length * 45) % 360;
+                const hue = (capturedPhotos.length * 30) % 360;
+                ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // Sky
-                const skyGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-                skyGradient.addColorStop(0, `hsl(${hue}, 80%, 70%)`);
-                skyGradient.addColorStop(1, `hsl(${hue + 10}, 80%, 70%)`);
-                
-                ctx.fillStyle = skyGradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
-                
-                // Ground
-                ctx.fillStyle = `hsl(${hue + 40}, 60%, 30%)`;
-                ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
-                
-                // Text
                 ctx.fillStyle = 'white';
-                ctx.font = 'bold 30px Arial';
+                ctx.font = 'bold 40px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(`Photo ${capturedPhotos.length + 1}`, canvas.width / 2, canvas.height / 2);
+                ctx.fillText(`Photo ${capturedPhotos.length + 1}`, canvas.width/2, canvas.height/2);
                 
-                const photoData = canvas.toDataURL('image/jpeg', 0.9);
                 capturedPhotos.push({
-                    data: photoData,
+                    data: canvas.toDataURL('image/jpeg', 0.9),
                     width: canvas.width,
-                    height: canvas.height,
-                    index: capturedPhotos.length
+                    height: canvas.height
                 });
             }
             
@@ -908,17 +894,22 @@
                 img.alt = `Photo ${index + 1}`;
                 img.className = 'photo-thumbnail';
                 img.title = `Photo ${index + 1}`;
+                img.dataset.index = index;
                 capturedPhotosContainer.appendChild(img);
                 
                 img.addEventListener('click', () => {
+                    // Remove active class from all thumbnails
+                    document.querySelectorAll('.photo-thumbnail').forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked thumbnail
+                    img.classList.add('active');
                     viewPhoto(photo.data, index);
                 });
             });
             
-            if (capturedPhotos.length >= 3) {
-                processPhotosBtn.disabled = false;
+            if (capturedPhotos.length >= 2) {
+                alignPhotosBtn.disabled = false;
             } else {
-                processPhotosBtn.disabled = true;
+                alignPhotosBtn.disabled = true;
             }
             
             resetPhotosBtn.disabled = capturedPhotos.length === 0;
@@ -931,10 +922,10 @@
             overlay.style.zIndex = '1001';
             
             overlay.innerHTML = `
-                <div style="background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; max-width: 90vw; max-height: 90vh;">
+                <div style="background: rgba(0,0,0,0.9); padding: 20px; border-radius: 10px; max-width: 90vw; max-height: 90vh;">
                     <h3>Photo ${index + 1} of ${capturedPhotos.length}</h3>
-                    <img src="${photoData}" style="max-width: 80vw; max-height: 60vh; border-radius: 5px; margin: 15px 0;">
-                    <div class="overlay-buttons">
+                    <img src="${photoData}" style="max-width: 80vw; max-height: 70vh; border-radius: 5px; margin: 15px 0;">
+                    <div class="controls">
                         <button id="close-view" class="button secondary-btn">
                             <i class="fas fa-times"></i> Close
                         </button>
@@ -964,150 +955,302 @@
             
             if (confirm(`Reset all ${capturedPhotos.length} captured photos?`)) {
                 capturedPhotos = [];
-                updatePhotoDisplay();
+                alignmentData = [];
                 panoramaImage = null;
+                updatePhotoDisplay();
                 showToast('All photos have been cleared', 'info');
             }
         });
         
-        // Process photos
-        processPhotosBtn.addEventListener('click', async () => {
-            if (capturedPhotos.length < 3) {
-                showToast('Need at least 3 photos to create a 360° image', 'error');
+        // Start alignment
+        alignPhotosBtn.addEventListener('click', () => {
+            if (capturedPhotos.length < 2) {
+                showToast('Need at least 2 photos to align', 'error');
                 return;
             }
             
-            // Update UI
+            // Initialize alignment data
+            alignmentData = capturedPhotos.map(() => ({
+                x: 0,
+                y: 0,
+                rotation: 0
+            }));
+            
+            currentAlignmentIndex = 1;
+            totalPhotos.textContent = capturedPhotos.length;
+            
+            // Switch to alignment section
             captureSection.style.display = 'none';
-            processingSection.style.display = 'block';
+            alignmentSection.style.display = 'block';
             step1.classList.remove('active');
             step2.classList.add('active');
             
-            // Wait for OpenCV if needed
-            if (!opencvLoaded) {
-                processingStatus.textContent = 'Waiting for OpenCV to load...';
-                opencvWarning.style.display = 'block';
-                
-                let waitCount = 0;
-                const waitInterval = setInterval(() => {
-                    waitCount++;
-                    if (typeof cv !== 'undefined') {
-                        opencvLoaded = true;
-                        clearInterval(waitInterval);
-                        opencvWarning.style.display = 'none';
-                        createPanoramaWithOpenCV();
-                    } else if (waitCount > 30) { // 30 seconds timeout
-                        clearInterval(waitInterval);
-                        showToast('OpenCV failed to load. Using simple stitching.', 'error');
-                        createSimplePanorama();
-                    }
-                }, 1000);
-            } else {
-                createPanoramaWithOpenCV();
-            }
+            // Setup canvas
+            setupAlignmentCanvas();
+            updateAlignmentDisplay();
         });
         
-        // Create panorama using OpenCV
-        async function createPanoramaWithOpenCV() {
-            try {
-                // Load images into OpenCV format
-                const cvImages = [];
-                progressBar.style.width = '10%';
-                processingStatus.textContent = 'Loading images into OpenCV...';
+        // Setup alignment canvas
+        function setupAlignmentCanvas() {
+            const container = alignmentCanvas.parentElement;
+            alignmentCanvas.width = container.clientWidth;
+            alignmentCanvas.height = container.clientHeight;
+            alignmentCtx = alignmentCanvas.getContext('2d');
+            
+            // Setup mouse/touch events
+            alignmentCanvas.addEventListener('mousedown', startDrag);
+            alignmentCanvas.addEventListener('mousemove', drag);
+            alignmentCanvas.addEventListener('mouseup', endDrag);
+            alignmentCanvas.addEventListener('mouseleave', endDrag);
+            
+            // Touch events for mobile
+            alignmentCanvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    startDrag({ clientX: touch.clientX, clientY: touch.clientY });
+                }
+            });
+            
+            alignmentCanvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    drag({ clientX: touch.clientX, clientY: touch.clientY });
+                }
+            });
+            
+            alignmentCanvas.addEventListener('touchend', endDrag);
+            
+            // Setup slider events
+            xOffsetSlider.addEventListener('input', updateFromSliders);
+            yOffsetSlider.addEventListener('input', updateFromSliders);
+            rotationSlider.addEventListener('input', updateFromSliders);
+            opacitySlider.addEventListener('input', updateFromSliders);
+            
+            // Setup control buttons
+            prevPhotoBtn.addEventListener('click', () => {
+                if (currentAlignmentIndex > 1) {
+                    currentAlignmentIndex--;
+                    updateAlignmentDisplay();
+                }
+            });
+            
+            nextPhotoBtn.addEventListener('click', () => {
+                if (currentAlignmentIndex < capturedPhotos.length) {
+                    currentAlignmentIndex++;
+                    updateAlignmentDisplay();
+                }
+            });
+            
+            applyAlignmentBtn.addEventListener('click', applyAlignment);
+            cancelAlignmentBtn.addEventListener('click', cancelAlignment);
+        }
+        
+        // Update alignment display
+        function updateAlignmentDisplay() {
+            currentPhotoIndex.textContent = currentAlignmentIndex + 1;
+            
+            // Update sliders with current alignment data
+            const currentData = alignmentData[currentAlignmentIndex] || { x: 0, y: 0, rotation: 0 };
+            xOffsetSlider.value = currentData.x;
+            yOffsetSlider.value = currentData.y;
+            rotationSlider.value = currentData.rotation;
+            opacitySlider.value = 50;
+            
+            updateSliderValues();
+            drawAlignmentCanvas();
+            
+            // Update button states
+            prevPhotoBtn.disabled = currentAlignmentIndex <= 1;
+            nextPhotoBtn.disabled = currentAlignmentIndex >= capturedPhotos.length - 1;
+        }
+        
+        // Update slider value displays
+        function updateSliderValues() {
+            xOffsetValue.textContent = xOffsetSlider.value;
+            yOffsetValue.textContent = yOffsetSlider.value;
+            rotationValue.textContent = `${rotationSlider.value}°`;
+            opacityValue.textContent = `${opacitySlider.value}%`;
+        }
+        
+        // Draw alignment canvas
+        function drawAlignmentCanvas() {
+            if (!alignmentCtx) return;
+            
+            const canvas = alignmentCanvas;
+            const ctx = alignmentCtx;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw previous photo (reference)
+            if (currentAlignmentIndex > 0) {
+                const prevPhoto = capturedPhotos[currentAlignmentIndex - 1];
+                const prevImg = new Image();
+                prevImg.onload = () => {
+                    // Scale to fit canvas height
+                    const scale = canvas.height / prevImg.height;
+                    const width = prevImg.width * scale;
+                    const x = (canvas.width - width) / 2;
+                    
+                    ctx.drawImage(prevImg, x, 0, width, canvas.height);
+                    
+                    // Draw current photo with alignment
+                    drawCurrentPhoto();
+                };
+                prevImg.src = prevPhoto.data;
+            } else {
+                drawCurrentPhoto();
+            }
+            
+            // Draw alignment guides
+            ctx.strokeStyle = 'rgba(0, 180, 216, 0.5)';
+            ctx.lineWidth = 2;
+            
+            // Center vertical line
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            
+            // Center horizontal line
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // Draw instruction
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Drag the photo or use sliders to align with the previous image', canvas.width / 2, 30);
+        }
+        
+        // Draw current photo with alignment
+        function drawCurrentPhoto() {
+            if (!alignmentCtx || currentAlignmentIndex >= capturedPhotos.length) return;
+            
+            const canvas = alignmentCanvas;
+            const ctx = alignmentCtx;
+            const currentPhoto = capturedPhotos[currentAlignmentIndex];
+            const currentData = alignmentData[currentAlignmentIndex] || { x: 0, y: 0, rotation: 0 };
+            
+            const img = new Image();
+            img.onload = () => {
+                // Calculate scale to match canvas height
+                const scale = canvas.height / img.height;
+                const width = img.width * scale;
                 
-                for (let i = 0; i < capturedPhotos.length; i++) {
-                    const img = await loadImageToCV(capturedPhotos[i].data);
-                    cvImages.push(img);
-                    
-                    const progress = 10 + ((i + 1) / capturedPhotos.length) * 30;
-                    progressBar.style.width = `${progress}%`;
-                    processingDetail.textContent = `Loaded ${i + 1} of ${capturedPhotos.length} images`;
-                    
-                    // Release memory for previous images
-                    if (i > 0) {
-                        cvImages[i - 1].delete();
-                    }
-                    
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                // Calculate position with alignment offsets
+                const baseX = (canvas.width - width) / 2;
+                const baseY = 0;
+                
+                const x = baseX + parseInt(xOffsetSlider.value);
+                const y = baseY + parseInt(yOffsetSlider.value);
+                const rotation = parseInt(rotationSlider.value);
+                const opacity = parseInt(opacitySlider.value) / 100;
+                
+                ctx.save();
+                
+                // Set opacity
+                ctx.globalAlpha = opacity;
+                
+                // Apply rotation around center
+                if (rotation !== 0) {
+                    ctx.translate(x + width / 2, y + canvas.height / 2);
+                    ctx.rotate(rotation * Math.PI / 180);
+                    ctx.translate(-(x + width / 2), -(y + canvas.height / 2));
                 }
                 
-                // Try to stitch with OpenCV
-                progressBar.style.width = '50%';
-                processingStatus.textContent = 'Attempting advanced stitching...';
-                processingDetail.textContent = 'This may take a few moments...';
+                // Draw the image
+                ctx.drawImage(img, x, y, width, canvas.height);
                 
-                let resultCanvas;
-                try {
-                    resultCanvas = await stitchImagesOpenCV(cvImages);
-                } catch (stitchError) {
-                    console.warn('OpenCV stitching failed, falling back to simple method:', stitchError);
-                    // Release OpenCV images
-                    cvImages.forEach(img => img.delete());
-                    
-                    // Fall back to simple method
-                    createSimplePanorama();
-                    return;
-                }
+                ctx.restore();
                 
-                // Release OpenCV images
-                cvImages.forEach(img => img.delete());
-                
-                progressBar.style.width = '90%';
-                processingStatus.textContent = 'Finalizing panorama...';
-                
-                // Convert to data URL
-                panoramaImage = resultCanvas.toDataURL('image/jpeg', 0.9);
-                const size = (panoramaImage.length * 3) / 4;
-                
-                // Update result
-                resultImage.src = panoramaImage;
-                resultInfoText.textContent = `Dimensions: ${resultCanvas.width}x${resultCanvas.height} • Format: JPEG • Size: ~${Math.round(size/1024)} KB • Photos: ${capturedPhotos.length} • Method: OpenCV Stitching`;
-                
-                progressBar.style.width = '100%';
-                
-                setTimeout(() => {
-                    processingSection.style.display = 'none';
-                    resultSection.style.display = 'block';
-                    step2.classList.remove('active');
-                    step3.classList.add('active');
-                    
-                    showToast('360° image created with advanced stitching!', 'success');
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error in OpenCV processing:', error);
-                showToast('Advanced stitching failed. Using simple method.', 'error');
-                createSimplePanorama();
+                // Draw alignment indicator
+                ctx.fillStyle = `rgba(0, 180, 216, ${opacity})`;
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(`Photo ${currentAlignmentIndex + 1}`, 20, 40);
+            };
+            img.src = currentPhoto.data;
+        }
+        
+        // Drag functions
+        function startDrag(e) {
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            currentOffsetX = parseInt(xOffsetSlider.value);
+            currentOffsetY = parseInt(yOffsetSlider.value);
+            alignmentCanvas.style.cursor = 'grabbing';
+        }
+        
+        function drag(e) {
+            if (!isDragging) return;
+            
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            
+            xOffsetSlider.value = currentOffsetX + dx;
+            yOffsetSlider.value = currentOffsetY + dy;
+            
+            updateSliderValues();
+            updateFromSliders();
+        }
+        
+        function endDrag() {
+            isDragging = false;
+            alignmentCanvas.style.cursor = 'move';
+        }
+        
+        // Update from sliders
+        function updateFromSliders() {
+            updateSliderValues();
+            
+            // Update alignment data
+            if (!alignmentData[currentAlignmentIndex]) {
+                alignmentData[currentAlignmentIndex] = { x: 0, y: 0, rotation: 0 };
+            }
+            
+            alignmentData[currentAlignmentIndex].x = parseInt(xOffsetSlider.value);
+            alignmentData[currentAlignmentIndex].y = parseInt(yOffsetSlider.value);
+            alignmentData[currentAlignmentIndex].rotation = parseInt(rotationSlider.value);
+            
+            drawAlignmentCanvas();
+        }
+        
+        // Apply alignment and create panorama
+        function applyAlignment() {
+            alignmentSection.style.display = 'none';
+            processingSection.style.display = 'block';
+            step2.classList.remove('active');
+            
+            // Process in background to avoid UI freeze
+            setTimeout(() => {
+                createAlignedPanorama();
+            }, 100);
+        }
+        
+        // Cancel alignment
+        function cancelAlignment() {
+            if (confirm('Cancel alignment and return to capture?')) {
+                alignmentSection.style.display = 'none';
+                captureSection.style.display = 'block';
+                step2.classList.remove('active');
+                step1.classList.add('active');
             }
         }
         
-        // Load image to OpenCV format
-        function loadImageToCV(dataUrl) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    
-                    // Convert to OpenCV Mat
-                    const src = cv.imread(canvas);
-                    resolve(src);
-                };
-                img.src = dataUrl;
-            });
-        }
-        
-        // Simple panorama as fallback
-        async function createSimplePanorama() {
+        // Create aligned panorama
+        async function createAlignedPanorama() {
             try {
-                // Load images
-                const images = [];
+                processingStatus.textContent = 'Loading images...';
                 progressBar.style.width = '10%';
-                processingStatus.textContent = 'Preparing images...';
                 
+                // Load all images
+                const images = [];
                 for (let i = 0; i < capturedPhotos.length; i++) {
                     const img = new Image();
                     await new Promise((resolve) => {
@@ -1116,144 +1259,168 @@
                     });
                     images.push(img);
                     
-                    const progress = 10 + ((i + 1) / capturedPhotos.length) * 40;
+                    const progress = 10 + ((i + 1) / capturedPhotos.length) * 20;
                     progressBar.style.width = `${progress}%`;
-                    processingDetail.textContent = `Loaded ${i + 1} of ${capturedPhotos.length} images`;
                     
                     await new Promise(resolve => setTimeout(resolve, 50));
                 }
                 
-                // Calculate dimensions
+                processingStatus.textContent = 'Creating panorama...';
+                progressBar.style.width = '40%';
+                
+                // Calculate panorama dimensions
                 const targetHeight = 800;
                 let totalWidth = 0;
-                const scaledHeights = [];
-                const scaledWidths = [];
+                const positions = [];
                 
-                for (const img of images) {
+                for (let i = 0; i < images.length; i++) {
+                    const img = images[i];
+                    const align = alignmentData[i] || { x: 0, y: 0, rotation: 0 };
+                    
+                    // Scale to target height
                     const scale = targetHeight / img.height;
                     const scaledWidth = img.width * scale;
-                    scaledWidths.push(scaledWidth);
-                    scaledHeights.push(targetHeight);
-                    totalWidth += scaledWidth;
+                    
+                    // Adjust for rotation (simplified - in practice would need proper bounds calculation)
+                    const effectiveWidth = scaledWidth * Math.abs(Math.cos(align.rotation * Math.PI / 180));
+                    
+                    positions.push({
+                        x: totalWidth,
+                        y: 0,
+                        width: scaledWidth,
+                        height: targetHeight,
+                        scale: scale,
+                        rotation: align.rotation,
+                        offsetX: align.x * (scale / (alignmentCanvas.width / img.width)),
+                        offsetY: align.y * (scale / (alignmentCanvas.height / img.height))
+                    });
+                    
+                    totalWidth += effectiveWidth * 0.8; // 80% overlap for blending
                 }
                 
-                // Create panorama with overlap
-                const overlap = 0.15; // 15% overlap
-                const effectiveWidth = totalWidth * (1 - overlap * (images.length - 1) / images.length);
+                // Add extra space for the last image
+                const lastPos = positions[positions.length - 1];
+                totalWidth += lastPos.width * 0.2;
                 
+                // Create canvas
                 const canvas = document.createElement('canvas');
-                canvas.width = effectiveWidth;
+                canvas.width = totalWidth;
                 canvas.height = targetHeight;
                 const ctx = canvas.getContext('2d');
                 
-                // Fill background
+                // Fill with background
                 ctx.fillStyle = '#1a1a2e';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
+                processingStatus.textContent = 'Drawing aligned images...';
                 progressBar.style.width = '60%';
-                processingStatus.textContent = 'Stitching images...';
                 
-                // Draw images with overlap
-                let currentX = 0;
+                // Draw each image with its alignment
                 for (let i = 0; i < images.length; i++) {
                     const img = images[i];
-                    const scale = targetHeight / img.height;
-                    const scaledWidth = img.width * scale;
+                    const pos = positions[i];
+                    const align = alignmentData[i] || { x: 0, y: 0, rotation: 0 };
                     
-                    // Calculate position with overlap
-                    const drawX = currentX - (i > 0 ? scaledWidth * overlap : 0);
+                    ctx.save();
+                    
+                    // Apply translation for positioning
+                    const x = pos.x + pos.offsetX;
+                    const y = pos.offsetY;
+                    
+                    // Apply rotation around center
+                    if (align.rotation !== 0) {
+                        const centerX = x + pos.width / 2;
+                        const centerY = y + pos.height / 2;
+                        ctx.translate(centerX, centerY);
+                        ctx.rotate(align.rotation * Math.PI / 180);
+                        ctx.translate(-centerX, -centerY);
+                    }
                     
                     // Draw image
-                    ctx.drawImage(img, drawX, 0, scaledWidth, targetHeight);
+                    ctx.drawImage(img, x, y, pos.width, pos.height);
                     
-                    // Blend overlap area
+                    ctx.restore();
+                    
+                    // Apply blending with previous image
                     if (i > 0) {
-                        const blendWidth = scaledWidth * overlap;
-                        const blendStartX = drawX;
+                        const blendWidth = pos.width * 0.2;
+                        const blendStartX = x - blendWidth / 2;
                         
                         // Create gradient for blending
                         const gradient = ctx.createLinearGradient(blendStartX, 0, blendStartX + blendWidth, 0);
                         gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+                        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
                         gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                         
-                        // Apply blend
                         ctx.save();
                         ctx.globalCompositeOperation = 'overlay';
                         ctx.fillStyle = gradient;
-                        ctx.fillRect(blendStartX, 0, blendWidth, targetHeight);
+                        ctx.fillRect(blendStartX, y, blendWidth, pos.height);
                         ctx.restore();
                     }
                     
-                    currentX = drawX + scaledWidth;
-                    
                     const progress = 60 + ((i + 1) / images.length) * 30;
                     progressBar.style.width = `${progress}%`;
-                    processingDetail.textContent = `Processed ${i + 1} of ${images.length} images`;
                     
                     await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
-                // Crop to remove black edges
+                // Crop to remove empty edges
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                let firstNonBlack = 0;
-                let lastNonBlack = canvas.width - 1;
+                let firstCol = 0;
+                let lastCol = canvas.width - 1;
                 
-                // Find non-black columns
+                // Find first non-empty column
                 for (let x = 0; x < canvas.width; x++) {
-                    let hasColor = false;
+                    let hasData = false;
                     for (let y = 0; y < canvas.height; y++) {
                         const idx = (y * canvas.width + x) * 4;
-                        if (imageData.data[idx] > 10 || imageData.data[idx + 1] > 10 || imageData.data[idx + 2] > 10) {
-                            hasColor = true;
+                        if (imageData.data[idx] < 250 || imageData.data[idx + 1] < 250 || imageData.data[idx + 2] < 250) {
+                            hasData = true;
                             break;
                         }
                     }
-                    if (hasColor) {
-                        firstNonBlack = x;
+                    if (hasData) {
+                        firstCol = Math.max(0, x - 10);
                         break;
                     }
                 }
                 
+                // Find last non-empty column
                 for (let x = canvas.width - 1; x >= 0; x--) {
-                    let hasColor = false;
+                    let hasData = false;
                     for (let y = 0; y < canvas.height; y++) {
                         const idx = (y * canvas.width + x) * 4;
-                        if (imageData.data[idx] > 10 || imageData.data[idx + 1] > 10 || imageData.data[idx + 2] > 10) {
-                            hasColor = true;
+                        if (imageData.data[idx] < 250 || imageData.data[idx + 1] < 250 || imageData.data[idx + 2] < 250) {
+                            hasData = true;
                             break;
                         }
                     }
-                    if (hasColor) {
-                        lastNonBlack = x;
+                    if (hasData) {
+                        lastCol = Math.min(canvas.width - 1, x + 10);
                         break;
                     }
                 }
                 
-                // Crop canvas
-                const croppedWidth = lastNonBlack - firstNonBlack + 1;
-                const croppedCanvas = document.createElement('canvas');
-                croppedCanvas.width = croppedWidth;
-                croppedCanvas.height = targetHeight;
-                const croppedCtx = croppedCanvas.getContext('2d');
-                croppedCtx.drawImage(canvas, firstNonBlack, 0, croppedWidth, targetHeight, 0, 0, croppedWidth, targetHeight);
+                const cropWidth = lastCol - firstCol + 1;
                 
-                // Convert to equirectangular format (2:1 ratio)
-                const finalWidth = croppedWidth;
+                // Create final panorama with 2:1 aspect ratio
+                const finalWidth = cropWidth;
                 const finalHeight = Math.round(finalWidth / 2);
                 const finalCanvas = document.createElement('canvas');
                 finalCanvas.width = finalWidth;
                 finalCanvas.height = finalHeight;
                 const finalCtx = finalCanvas.getContext('2d');
                 
-                // Scale and center
+                // Scale and center the panorama
                 const finalScale = finalHeight / targetHeight;
-                const finalScaledWidth = croppedWidth * finalScale;
+                const finalScaledWidth = cropWidth * finalScale;
                 const finalX = (finalWidth - finalScaledWidth) / 2;
                 
-                finalCtx.drawImage(croppedCanvas, finalX, 0, finalScaledWidth, finalHeight);
+                // Draw cropped portion
+                finalCtx.drawImage(canvas, firstCol, 0, cropWidth, targetHeight, finalX, 0, finalScaledWidth, finalHeight);
                 
-                // Add sky and ground gradients
+                // Add gradients for sky and ground
                 const skyGradient = finalCtx.createLinearGradient(0, 0, 0, finalHeight * 0.4);
                 skyGradient.addColorStop(0, 'rgba(26, 42, 108, 0.6)');
                 skyGradient.addColorStop(1, 'transparent');
@@ -1268,119 +1435,103 @@
                 finalCtx.fillStyle = groundGradient;
                 finalCtx.fillRect(0, finalHeight * 0.6, finalWidth, finalHeight * 0.4);
                 
-                panoramaImage = finalCanvas.toDataURL('image/jpeg', 0.9);
-                const size = (panoramaImage.length * 3) / 4;
-                
-                resultImage.src = panoramaImage;
-                resultInfoText.textContent = `Dimensions: ${finalWidth}x${finalHeight} • Format: JPEG • Size: ~${Math.round(size/1024)} KB • Photos: ${capturedPhotos.length} • Method: Simple Blending`;
-                
                 progressBar.style.width = '100%';
+                processingStatus.textContent = 'Finalizing...';
+                
+                // Convert to data URL
+                panoramaImage = finalCanvas.toDataURL('image/jpeg', 0.9);
+                const size = Math.round((panoramaImage.length * 3) / 4 / 1024);
+                
+                // Update result
+                resultImage.src = panoramaImage;
+                resultInfoText.textContent = `Dimensions: ${finalWidth}x${finalHeight} • Size: ~${size} KB • Photos: ${capturedPhotos.length}`;
                 
                 setTimeout(() => {
                     processingSection.style.display = 'none';
                     resultSection.style.display = 'block';
-                    step2.classList.remove('active');
                     step3.classList.add('active');
                     
-                    showToast('360° image created!', 'success');
+                    showToast('360° panorama created successfully!', 'success');
                 }, 500);
                 
             } catch (error) {
-                console.error('Error creating simple panorama:', error);
+                console.error('Error creating panorama:', error);
                 showToast('Error creating panorama', 'error');
                 
-                // Go back to capture
-                captureSection.style.display = 'block';
-                processingSection.style.display = 'none';
-                step2.classList.remove('active');
-                step1.classList.add('active');
+                // Fall back to simple stitching
+                createSimplePanorama();
             }
         }
         
-        // Basic OpenCV stitching (simplified)
-        async function stitchImagesOpenCV(images) {
-            if (images.length < 2) {
-                throw new Error('Need at least 2 images for stitching');
-            }
-            
-            // For demonstration, we'll create a simple panorama
-            // In a real implementation, you would use OpenCV's Stitcher class
-            
-            // Since OpenCV.js Stitcher might not be available or reliable,
-            // we'll create a simple blended panorama
-            
-            const canvas = document.createElement('canvas');
-            
-            // Calculate dimensions based on first image
-            const baseHeight = 800;
-            const baseWidth = images[0].cols;
-            const scale = baseHeight / images[0].rows;
-            
-            // Calculate total width with overlap
-            const overlapPercent = 0.2; // 20% overlap
-            let totalScaledWidth = 0;
-            
-            for (const img of images) {
-                const imgScale = baseHeight / img.rows;
-                const scaledWidth = img.cols * imgScale;
-                totalScaledWidth += scaledWidth * (1 - overlapPercent);
-            }
-            
-            // Add back the last image's full width
-            const lastImg = images[images.length - 1];
-            const lastScale = baseHeight / lastImg.rows;
-            totalScaledWidth += lastImg.cols * lastScale * overlapPercent;
-            
-            canvas.width = Math.round(totalScaledWidth);
-            canvas.height = baseHeight;
-            const ctx = canvas.getContext('2d');
-            
-            // Fill background
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw images with blending
-            let currentX = 0;
-            
-            for (let i = 0; i < images.length; i++) {
-                const img = images[i];
-                const imgScale = baseHeight / img.rows;
-                const scaledWidth = img.cols * imgScale;
-                
-                // Convert OpenCV Mat to canvas
-                const imgCanvas = document.createElement('canvas');
-                imgCanvas.width = img.cols;
-                imgCanvas.height = img.rows;
-                cv.imshow(imgCanvas, img);
-                
-                // Calculate position
-                const drawX = currentX - (i > 0 ? scaledWidth * overlapPercent : 0);
-                
-                // Draw to main canvas
-                ctx.drawImage(imgCanvas, drawX, 0, scaledWidth, baseHeight);
-                
-                // Apply blend to overlap area
-                if (i > 0) {
-                    const blendWidth = scaledWidth * overlapPercent;
-                    const blendStartX = drawX;
-                    
-                    // Create blend mask
-                    const gradient = ctx.createLinearGradient(blendStartX, 0, blendStartX + blendWidth, 0);
-                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
-                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    
-                    ctx.save();
-                    ctx.globalCompositeOperation = 'overlay';
-                    ctx.fillStyle = gradient;
-                    ctx.fillRect(blendStartX, 0, blendWidth, baseHeight);
-                    ctx.restore();
+        // Simple panorama fallback
+        async function createSimplePanorama() {
+            try {
+                // Load images
+                const images = [];
+                for (let i = 0; i < capturedPhotos.length; i++) {
+                    const img = new Image();
+                    await new Promise((resolve) => {
+                        img.onload = resolve;
+                        img.src = capturedPhotos[i].data;
+                    });
+                    images.push(img);
                 }
                 
-                currentX = drawX + scaledWidth;
+                // Calculate dimensions
+                const targetHeight = 600;
+                let totalWidth = 0;
+                
+                for (const img of images) {
+                    const scale = targetHeight / img.height;
+                    totalWidth += img.width * scale;
+                }
+                
+                // Create panorama
+                const canvas = document.createElement('canvas');
+                canvas.width = totalWidth;
+                canvas.height = targetHeight;
+                const ctx = canvas.getContext('2d');
+                
+                let currentX = 0;
+                for (const img of images) {
+                    const scale = targetHeight / img.height;
+                    const width = img.width * scale;
+                    ctx.drawImage(img, currentX, 0, width, targetHeight);
+                    currentX += width;
+                }
+                
+                // Convert to 2:1 aspect ratio
+                const finalWidth = Math.round(totalWidth);
+                const finalHeight = Math.round(finalWidth / 2);
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = finalWidth;
+                finalCanvas.height = finalHeight;
+                const finalCtx = finalCanvas.getContext('2d');
+                
+                // Scale and center
+                const finalScale = finalHeight / targetHeight;
+                const finalScaledWidth = totalWidth * finalScale;
+                const finalX = (finalWidth - finalScaledWidth) / 2;
+                
+                finalCtx.drawImage(canvas, finalX, 0, finalScaledWidth, finalHeight);
+                
+                panoramaImage = finalCanvas.toDataURL('image/jpeg', 0.9);
+                resultImage.src = panoramaImage;
+                resultInfoText.textContent = `Dimensions: ${finalWidth}x${finalHeight} • Photos: ${capturedPhotos.length}`;
+                
+                processingSection.style.display = 'none';
+                resultSection.style.display = 'block';
+                step3.classList.add('active');
+                
+                showToast('Panorama created (simple method)', 'info');
+                
+            } catch (error) {
+                showToast('Failed to create panorama', 'error');
+                alignmentSection.style.display = 'none';
+                captureSection.style.display = 'block';
+                step2.classList.remove('active');
+                step1.classList.add('active');
             }
-            
-            return canvas;
         }
         
         // Download image
@@ -1398,22 +1549,7 @@
             showToast('Image downloaded successfully', 'success');
         });
         
-        // Use in marker tool
-        useInToolBtn.addEventListener('click', () => {
-            if (!panoramaImage) {
-                showToast('No image to use', 'error');
-                return;
-            }
-            
-            try {
-                localStorage.setItem('lastPanoramaImage', panoramaImage);
-                showToast('Image saved! Open your Marker Tool to use it.', 'success');
-            } catch (error) {
-                showToast('Error saving image. Please download it instead.', 'error');
-            }
-        });
-        
-        // Start new capture
+        // New capture
         newCaptureBtn.addEventListener('click', () => {
             resultSection.style.display = 'none';
             captureSection.style.display = 'block';
@@ -1431,12 +1567,13 @@
             capturePhotoBtn.disabled = true;
             
             capturedPhotos = [];
+            alignmentData = [];
             updatePhotoDisplay();
             
             showToast('Ready for new capture session', 'info');
         });
         
-        // Show toast message
+        // Show toast
         function showToast(message, type = 'info') {
             toast.textContent = message;
             toast.className = `toast ${type}`;
@@ -1451,17 +1588,6 @@
         window.addEventListener('beforeunload', () => {
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
-            }
-        });
-        
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
-                cameraView.style.display = 'none';
-                cameraPlaceholder.style.display = 'flex';
-                capturePhotoBtn.disabled = true;
-                startCameraBtn.disabled = false;
             }
         });
     </script>
