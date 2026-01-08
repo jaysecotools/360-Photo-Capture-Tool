@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>360° Photo Capture Tool</title>
+    <title>360° Spherical Photo Capture Tool</title>
     <style>
         * {
             margin: 0;
@@ -443,6 +443,163 @@
             font-weight: bold;
         }
         
+        /* SPHERICAL CAPTURE STYLES */
+        .capture-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .grid-row {
+            display: flex;
+            gap: 8px;
+            margin: 4px 0;
+            justify-content: center;
+        }
+        
+        .grid-cell {
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .grid-cell.captured {
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            border-color: #00b4d8;
+        }
+        
+        .grid-cell.current {
+            background: linear-gradient(135deg, #e63946, #d00000);
+            border-color: #e63946;
+            animation: pulse 2s infinite;
+        }
+        
+        .grid-cell.target {
+            background: linear-gradient(135deg, #2a9d8f, #1d7873);
+            border-color: #2a9d8f;
+        }
+        
+        .grid-label {
+            font-size: 0.7rem;
+            margin-top: 3px;
+            text-align: center;
+        }
+        
+        .capture-mode-selector {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .mode-btn {
+            padding: 10px 20px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .mode-btn.active {
+            background: #00b4d8;
+            border-color: #00b4d8;
+            box-shadow: 0 5px 15px rgba(0, 180, 216, 0.3);
+        }
+        
+        .mode-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .spherical-info {
+            background: rgba(0, 180, 216, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .alignment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .alignment-cell {
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            background: #000;
+            cursor: pointer;
+        }
+        
+        .alignment-cell img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+        
+        .alignment-cell.active {
+            border-color: #00b4d8;
+            box-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+        }
+        
+        .cell-label {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+        }
+        
+        .pattern-preview {
+            display: inline-block;
+            margin: 20px auto;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .capture-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .capture-progress-fill {
+            height: 100%;
+            background: #00b4d8;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(230, 57, 70, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); }
+        }
+        
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.5rem;
@@ -466,14 +623,46 @@
             .alignment-canvas-container {
                 height: 300px;
             }
+            
+            .grid-cell {
+                width: 35px;
+                height: 35px;
+                font-size: 0.7rem;
+            }
+            
+            .alignment-cell img {
+                height: 80px;
+            }
+            
+            .mode-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .grid-cell {
+                width: 30px;
+                height: 30px;
+                font-size: 0.6rem;
+            }
+            
+            .grid-row {
+                gap: 5px;
+            }
+            
+            .mode-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="header">
-        <h1><i class="fas fa-camera"></i> 360° Photo Capture Tool</h1>
-        <p class="subtitle">Capture photos and manually align them to create a panoramic image</p>
+        <h1><i class="fas fa-globe-americas"></i> 360° Spherical Photo Capture Tool</h1>
+        <p class="subtitle">Capture full spherical panoramas - above, below, and all around</p>
     </div>
     
     <div class="main-container">
@@ -481,62 +670,126 @@
         <div class="step-indicator">
             <div class="step active" id="step1">
                 <div class="step-number">1</div>
-                <div class="step-label">Capture</div>
+                <div class="step-label">Setup</div>
             </div>
             <div class="step" id="step2">
                 <div class="step-number">2</div>
-                <div class="step-label">Align</div>
+                <div class="step-label">Capture</div>
             </div>
             <div class="step" id="step3">
                 <div class="step-number">3</div>
+                <div class="step-label">Align</div>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-number">4</div>
                 <div class="step-label">Result</div>
             </div>
         </div>
         
-        <!-- Capture Section -->
-        <div class="section" id="capture-section">
-            <h2><i class="fas fa-camera"></i> Capture Photos</h2>
+        <!-- Setup Section -->
+        <div class="section" id="setup-section">
+            <h2><i class="fas fa-cog"></i> Capture Setup</h2>
             
-            <div class="camera-container">
-                <div class="camera-placeholder" id="camera-placeholder">
-                    <i class="fas fa-camera"></i>
-                    <p>Camera access required</p>
-                    <p>Click "Start Camera" to begin</p>
+            <div class="spherical-info">
+                <p><strong>Full Spherical Capture:</strong> To capture a complete sphere (360° horizontally × 180° vertically), you need to take photos in a grid pattern, including shots directly above (zenith) and below (nadir).</p>
+                <p style="margin-top: 10px;"><i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Keep camera level and rotate consistently between shots. Ensure 30-40% overlap between adjacent photos.</p>
+            </div>
+            
+            <div class="capture-mode-selector">
+                <div class="mode-btn active" data-mode="sphere">
+                    <i class="fas fa-globe-americas"></i> Full Sphere
                 </div>
-                <video id="camera-view" autoplay playsinline></video>
+                <div class="mode-btn" data-mode="cylinder">
+                    <i class="fas fa-circle"></i> Cylinder Only
+                </div>
+                <div class="mode-btn" data-mode="dome">
+                    <i class="fas fa-umbrella"></i> Dome (Above Only)
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 25px 0;">
+                <h3 style="color: #a0c8ff; margin-bottom: 15px;">Capture Pattern Preview</h3>
+                <div class="pattern-preview">
+                    <canvas id="pattern-preview-canvas" width="200" height="150"></canvas>
+                </div>
+                <p id="pattern-info" style="margin-top: 15px; color: #a0c8ff;">Full Sphere: 5 rows (including zenith/nadir) × varies columns = ~26 photos</p>
             </div>
             
             <div class="controls">
-                <button id="start-camera" class="button primary-btn">
-                    <i class="fas fa-play"></i> Start Camera
+                <button id="start-capture-session" class="button primary-btn">
+                    <i class="fas fa-play-circle"></i> Start Capture Session
                 </button>
-                <button id="capture-photo" class="button secondary-btn" disabled>
-                    <i class="fas fa-camera"></i> Take Photo
-                </button>
-                <button id="reset-photos" class="button danger-btn" disabled>
-                    <i class="fas fa-trash"></i> Reset Photos
-                </button>
-            </div>
-            
-            <div class="photo-counter">
-                <span id="photo-count">0</span> photos captured (aim for 8-12 photos for a full 360°)
-            </div>
-            
-            <div class="captured-photos" id="captured-photos">
-                <!-- Photo thumbnails will appear here -->
-            </div>
-            
-            <div class="controls" style="margin-top: 30px;">
-                <button id="align-photos" class="button success-btn" disabled>
-                    <i class="fas fa-align-center"></i> Align Photos
+                <button id="use-sample" class="button secondary-btn">
+                    <i class="fas fa-images"></i> Use Sample Photos
                 </button>
             </div>
         </div>
         
+        <!-- Capture Section -->
+        <div class="section" id="capture-section" style="display: none;">
+            <h2><i class="fas fa-camera"></i> Capture Photos</h2>
+            
+            <div class="capture-grid">
+                <div id="capture-grid-visual" style="margin-bottom: 20px;">
+                    <!-- Grid will be generated here -->
+                </div>
+            </div>
+            
+            <div class="camera-container">
+                <div class="camera-placeholder" id="camera-placeholder">
+                    <i class="fas fa-camera"></i>
+                    <p>Camera access required for live capture</p>
+                    <p id="capture-guidance">Follow the highlighted grid position</p>
+                </div>
+                <video id="camera-view" autoplay playsinline></video>
+            </div>
+            
+            <div class="photo-counter">
+                <span id="photo-count">0</span> / <span id="total-needed">26</span> photos captured
+                <div class="capture-progress-bar">
+                    <div class="capture-progress-fill" id="capture-progress-fill"></div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="capture-current-position" class="button primary-btn">
+                    <i class="fas fa-camera"></i> Capture Current Position
+                </button>
+                <button id="skip-current-position" class="button secondary-btn">
+                    <i class="fas fa-forward"></i> Skip Position
+                </button>
+                <button id="finish-capture" class="button success-btn" disabled>
+                    <i class="fas fa-check"></i> Finish Capture
+                </button>
+                <button id="cancel-capture" class="button danger-btn">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+            
+            <div class="captured-photos" id="spherical-captured-photos">
+                <!-- Photo thumbnails will appear here -->
+            </div>
+            
+            <div style="margin-top: 25px; padding: 15px; background: rgba(0, 180, 216, 0.1); border-radius: 8px;">
+                <p style="color: #a0c8ff; font-weight: bold; margin-bottom: 10px;"><i class="fas fa-info-circle"></i> Capture Guidance:</p>
+                <ul style="padding-left: 20px; font-size: 0.9rem;">
+                    <li>Start with middle row (horizon level), then move up/down</li>
+                    <li>For each row, rotate completely around (360°)</li>
+                    <li>For zenith: point camera straight up</li>
+                    <li>For nadir: point camera straight down</li>
+                    <li>Ensure good overlap (30-40%) between adjacent photos</li>
+                </ul>
+            </div>
+        </div>
+        
         <!-- Alignment Section -->
-        <div class="section alignment-container" id="alignment-section">
+        <div class="section alignment-container" id="alignment-section" style="display: none;">
             <h2><i class="fas fa-sliders-h"></i> Align Photos</h2>
-            <p>Drag the current photo to align it with the previous one. Use the controls to adjust positioning.</p>
+            <p>Select a photo to align it with adjacent photos. Use the grid below to navigate.</p>
+            
+            <div class="alignment-grid" id="alignment-photo-grid">
+                <!-- Photos will be loaded here -->
+            </div>
             
             <div class="alignment-canvas-container">
                 <canvas id="alignment-canvas"></canvas>
@@ -575,11 +828,11 @@
             </div>
             
             <div class="alignment-controls">
-                <button id="prev-photo" class="button secondary-btn">
-                    <i class="fas fa-arrow-left"></i> Previous Photo
+                <button id="prev-alignment-photo" class="button secondary-btn">
+                    <i class="fas fa-arrow-left"></i> Previous
                 </button>
-                <button id="next-photo" class="button primary-btn">
-                    Next Photo <i class="fas fa-arrow-right"></i>
+                <button id="next-alignment-photo" class="button primary-btn">
+                    Next <i class="fas fa-arrow-right"></i>
                 </button>
                 <button id="apply-alignment" class="button success-btn">
                     <i class="fas fa-check"></i> Apply Alignment
@@ -595,8 +848,8 @@
         </div>
         
         <!-- Processing Section -->
-        <div class="section processing-container" id="processing-section">
-            <h2><i class="fas fa-cogs"></i> Creating 360° Image</h2>
+        <div class="section processing-container" id="processing-section" style="display: none;">
+            <h2><i class="fas fa-cogs"></i> Creating 360° Spherical Image</h2>
             <div class="loader"></div>
             <p id="processing-status">Processing images...</p>
             <div class="progress-bar">
@@ -605,21 +858,27 @@
         </div>
         
         <!-- Result Section -->
-        <div class="section result-container" id="result-section">
-            <h2><i class="fas fa-check-circle"></i> 360° Image Created!</h2>
+        <div class="section result-container" id="result-section" style="display: none;">
+            <h2><i class="fas fa-check-circle"></i> 360° Spherical Image Created!</h2>
             
             <div id="result-image-container">
-                <img id="result-image" class="result-image" alt="360° Panorama">
+                <img id="result-image" class="result-image" alt="360° Spherical Panorama">
             </div>
             
             <div class="result-info">
-                <p><strong>Image Information:</strong></p>
+                <p><strong>Spherical Image Information:</strong></p>
                 <p id="result-info-text">Dimensions: Loading...</p>
+                <p id="spherical-info-text" style="margin-top: 10px; color: #a0c8ff;">
+                    <i class="fas fa-info-circle"></i> This is an equirectangular projection (2:1 aspect ratio) suitable for 360° viewers and VR.
+                </p>
             </div>
             
             <div class="controls">
                 <button id="download-image" class="button primary-btn">
                     <i class="fas fa-download"></i> Download Image
+                </button>
+                <button id="view-spherical" class="button secondary-btn">
+                    <i class="fas fa-eye"></i> View in 360° Viewer
                 </button>
                 <button id="new-capture" class="button secondary-btn">
                     <i class="fas fa-redo"></i> New Capture
@@ -629,28 +888,29 @@
         
         <!-- Instructions -->
         <div class="section instructions">
-            <h3><i class="fas fa-graduation-cap"></i> How to Create a Perfect 360° Panorama</h3>
+            <h3><i class="fas fa-graduation-cap"></i> How to Create a Perfect Spherical Panorama</h3>
             <ol>
-                <li><strong>Capture with overlap</strong> - Each photo should overlap the previous by 25-30%</li>
-                <li><strong>Use manual alignment</strong> - Drag each photo to match features with the previous one</li>
-                <li><strong>Adjust carefully</strong> - Use the sliders to fine-tune position, rotation, and opacity</li>
-                <li><strong>Check alignment</strong> - Toggle opacity to see how photos line up</li>
-                <li><strong>Apply blending</strong> - The final image will have smooth transitions between photos</li>
+                <li><strong>Choose capture mode</strong> - Full sphere for complete 360x180°, cylinder for horizontal only, dome for sky only</li>
+                <li><strong>Follow the grid pattern</strong> - Capture all positions in the suggested pattern</li>
+                <li><strong>Maintain consistent overlap</strong> - 30-40% overlap ensures good stitching</li>
+                <li><strong>Use manual alignment</strong> - Align key features between adjacent photos</li>
+                <li><strong>Check zenith and nadir</strong> - Ensure top and bottom shots are captured correctly</li>
+                <li><strong>Export as equirectangular</strong> - 2:1 aspect ratio for compatibility with 360° viewers</li>
             </ol>
-            <p><strong>Note:</strong> This tool requires manual alignment for best results. For automatic stitching, consider using specialized software like Photoshop, Hugin, or Microsoft Image Composite Editor.</p>
+            <p><strong>Note:</strong> For best results with spherical panoramas, consider using specialized stitching software like Hugin or PTGui after capturing all photos.</p>
         </div>
     </div>
     
     <!-- Camera Permission Overlay -->
     <div class="overlay" id="permission-overlay" style="display: none;">
         <h2><i class="fas fa-camera"></i> Camera Access Required</h2>
-        <p>This app needs access to your camera to capture photos for creating 360° panoramic images.</p>
+        <p>This app needs access to your camera to capture photos for creating 360° spherical panoramic images.</p>
         <div class="controls">
             <button id="grant-permission" class="button primary-btn">
                 <i class="fas fa-check"></i> Allow Camera Access
             </button>
             <button id="skip-camera" class="button secondary-btn">
-                <i class="fas fa-ban"></i> Use Sample Instead
+                <i class="fas fa-images"></i> Use Sample Photos
             </button>
         </div>
     </div>
@@ -662,16 +922,17 @@
         // DOM Elements
         const cameraView = document.getElementById('camera-view');
         const cameraPlaceholder = document.getElementById('camera-placeholder');
-        const startCameraBtn = document.getElementById('start-camera');
-        const capturePhotoBtn = document.getElementById('capture-photo');
-        const resetPhotosBtn = document.getElementById('reset-photos');
-        const alignPhotosBtn = document.getElementById('align-photos');
-        const downloadImageBtn = document.getElementById('download-image');
-        const newCaptureBtn = document.getElementById('new-capture');
+        const captureGuidance = document.getElementById('capture-guidance');
         const photoCount = document.getElementById('photo-count');
-        const capturedPhotosContainer = document.getElementById('captured-photos');
+        const totalNeeded = document.getElementById('total-needed');
+        const captureProgressFill = document.getElementById('capture-progress-fill');
+        const sphericalCapturedPhotos = document.getElementById('spherical-captured-photos');
+        const patternPreviewCanvas = document.getElementById('pattern-preview-canvas');
+        const patternInfo = document.getElementById('pattern-info');
+        const alignmentPhotoGrid = document.getElementById('alignment-photo-grid');
         const processingSection = document.getElementById('processing-section');
         const resultSection = document.getElementById('result-section');
+        const setupSection = document.getElementById('setup-section');
         const captureSection = document.getElementById('capture-section');
         const alignmentSection = document.getElementById('alignment-section');
         const progressBar = document.getElementById('progress-bar');
@@ -693,8 +954,8 @@
         const yOffsetValue = document.getElementById('y-offset-value');
         const rotationValue = document.getElementById('rotation-value');
         const opacityValue = document.getElementById('opacity-value');
-        const prevPhotoBtn = document.getElementById('prev-photo');
-        const nextPhotoBtn = document.getElementById('next-photo');
+        const prevAlignmentPhotoBtn = document.getElementById('prev-alignment-photo');
+        const nextAlignmentPhotoBtn = document.getElementById('next-alignment-photo');
         const applyAlignmentBtn = document.getElementById('apply-alignment');
         const cancelAlignmentBtn = document.getElementById('cancel-alignment');
         const currentPhotoIndex = document.getElementById('current-photo-index');
@@ -704,13 +965,25 @@
         const step1 = document.getElementById('step1');
         const step2 = document.getElementById('step2');
         const step3 = document.getElementById('step3');
+        const step4 = document.getElementById('step4');
+        
+        // Control buttons
+        const startCaptureSessionBtn = document.getElementById('start-capture-session');
+        const useSampleBtn = document.getElementById('use-sample');
+        const captureCurrentPositionBtn = document.getElementById('capture-current-position');
+        const skipCurrentPositionBtn = document.getElementById('skip-current-position');
+        const finishCaptureBtn = document.getElementById('finish-capture');
+        const cancelCaptureBtn = document.getElementById('cancel-capture');
+        const downloadImageBtn = document.getElementById('download-image');
+        const viewSphericalBtn = document.getElementById('view-spherical');
+        const newCaptureBtn = document.getElementById('new-capture');
         
         // App State
         let stream = null;
         let capturedPhotos = [];
         let panoramaImage = null;
         let alignmentData = [];
-        let currentAlignmentIndex = 1;
+        let currentAlignmentIndex = 0;
         let alignmentCtx = null;
         let isDragging = false;
         let dragStartX = 0;
@@ -718,8 +991,15 @@
         let currentOffsetX = 0;
         let currentOffsetY = 0;
         
+        // Spherical capture state
+        let captureMode = 'sphere'; // 'sphere', 'cylinder', or 'dome'
+        let captureGrid = [];
+        let currentGridPosition = { row: 2, col: 0 }; // Start at middle row
+        let isCapturing = false;
+        
         // Initialize
         window.addEventListener('load', () => {
+            updateCapturePatternPreview();
             setTimeout(() => {
                 permissionOverlay.style.display = 'flex';
             }, 500);
@@ -734,74 +1014,31 @@
         // Skip camera (use sample)
         skipCameraBtn.addEventListener('click', () => {
             permissionOverlay.style.display = 'none';
-            loadSamplePhotos();
+            useSamplePhotos();
         });
         
-        // Load sample photos
-        function loadSamplePhotos() {
-            capturedPhotos = [];
-            
-            // Create 6 sample photos with overlapping content
-            for (let i = 0; i < 6; i++) {
-                const canvas = document.createElement('canvas');
-                canvas.width = 800;
-                canvas.height = 600;
-                const ctx = canvas.getContext('2d');
-                
-                // Background that shifts gradually
-                const hue = 210 + (i * 10);
-                const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-                gradient.addColorStop(0, `hsl(${hue}, 70%, 50%)`);
-                gradient.addColorStop(1, `hsl(${hue + 20}, 70%, 50%)`);
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Add horizon
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(0, canvas.height/2);
-                ctx.lineTo(canvas.width, canvas.height/2);
-                ctx.stroke();
-                
-                // Add text
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 40px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(`Photo ${i+1}`, canvas.width/2, canvas.height/2 - 50);
-                
-                // Add overlapping object that moves across photos
-                const objectX = 600 - (i * 120);
-                if (objectX > -50 && objectX < canvas.width + 50) {
-                    ctx.fillStyle = '#e63946';
-                    ctx.beginPath();
-                    ctx.arc(objectX, canvas.height/2, 40, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = 'white';
-                    ctx.font = '20px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('Align me!', objectX, canvas.height/2 + 60);
-                }
-                
-                capturedPhotos.push({
-                    data: canvas.toDataURL('image/jpeg', 0.9),
-                    width: canvas.width,
-                    height: canvas.height
-                });
-            }
-            
-            updatePhotoDisplay();
-            capturePhotoBtn.disabled = true;
-            alignPhotosBtn.disabled = false;
-            resetPhotosBtn.disabled = false;
-            
-            showToast(`Loaded ${capturedPhotos.length} sample photos`, 'info');
-        }
+        // Mode selection
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                captureMode = this.dataset.mode;
+                updateCapturePatternPreview();
+            });
+        });
         
-        // Start camera
-        startCameraBtn.addEventListener('click', async () => {
+        // Use sample photos
+        useSampleBtn.addEventListener('click', useSamplePhotos);
+        
+        // Start capture session
+        startCaptureSessionBtn.addEventListener('click', async () => {
+            setupSection.style.display = 'none';
+            captureSection.style.display = 'block';
+            step1.classList.remove('active');
+            step2.classList.add('active');
+            
+            initializeCaptureGrid();
+            
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: { 
@@ -815,115 +1052,458 @@
                 cameraView.srcObject = stream;
                 cameraView.style.display = 'block';
                 cameraPlaceholder.style.display = 'none';
-                capturePhotoBtn.disabled = false;
-                resetPhotosBtn.disabled = false;
+                captureCurrentPositionBtn.disabled = false;
                 
                 showToast('Camera started successfully', 'success');
             } catch (error) {
                 console.error('Camera error:', error);
-                showToast(`Camera error: ${error.message}`, 'error');
-                loadSamplePhotos();
-                startCameraBtn.disabled = true;
-                startCameraBtn.innerHTML = '<i class="fas fa-ban"></i> Camera Unavailable';
+                showToast(`Camera error: ${error.message}. Using sample mode.`, 'error');
+                cameraPlaceholder.innerHTML = `
+                    <i class="fas fa-images"></i>
+                    <p>Camera unavailable</p>
+                    <p>Using sample photos instead</p>
+                `;
+                // Load sample photos after a delay
+                setTimeout(() => {
+                    useSamplePhotos();
+                }, 1000);
             }
         });
         
-        // Capture photo
-        capturePhotoBtn.addEventListener('click', () => {
-            if (!stream && capturedPhotos.length === 0) {
-                showToast('Camera not started. Using sample mode.', 'info');
-                loadSamplePhotos();
-                return;
+        // Update capture pattern preview
+        function updateCapturePatternPreview() {
+            const ctx = patternPreviewCanvas.getContext('2d');
+            const width = patternPreviewCanvas.width;
+            const height = patternPreviewCanvas.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw background
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw pattern based on mode
+            switch(captureMode) {
+                case 'sphere':
+                    drawSphericalPattern(ctx, width, height);
+                    patternInfo.textContent = 'Full Sphere: 5 rows × varies columns = ~26 photos';
+                    break;
+                case 'cylinder':
+                    drawCylindricalPattern(ctx, width, height);
+                    patternInfo.textContent = 'Cylinder Only: 1 row × 12 columns = 12 photos';
+                    break;
+                case 'dome':
+                    drawDomePattern(ctx, width, height);
+                    patternInfo.textContent = 'Dome: 3 rows × 8 columns = 24 photos';
+                    break;
             }
+        }
+        
+        function drawSphericalPattern(ctx, width, height) {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) * 0.4;
+            
+            // Draw sphere outline
+            ctx.strokeStyle = 'rgba(0, 180, 216, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Draw grid points (5 rows including zenith and nadir)
+            const rows = 5;
+            for (let row = 0; row < rows; row++) {
+                let cols;
+                if (row === 0 || row === rows - 1) {
+                    cols = 1; // Zenith and nadir
+                } else if (row === 1 || row === rows - 2) {
+                    cols = 6; // High and low rows
+                } else {
+                    cols = 12; // Middle row
+                }
+                
+                for (let col = 0; col < cols; col++) {
+                    const lat = Math.PI * (row / (rows - 1) - 0.5);
+                    const lon = 2 * Math.PI * col / cols;
+                    
+                    const x = centerX + radius * Math.cos(lat) * Math.cos(lon);
+                    const y = centerY + radius * Math.cos(lat) * Math.sin(lon);
+                    
+                    ctx.fillStyle = '#00b4d8';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Add labels
+            ctx.fillStyle = '#a0c8ff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Zenith', centerX, centerY - radius - 10);
+            ctx.fillText('Nadir', centerX, centerY + radius + 15);
+        }
+        
+        function drawCylindricalPattern(ctx, width, height) {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) * 0.3;
+            
+            // Draw cylinder representation
+            ctx.strokeStyle = 'rgba(0, 180, 216, 0.5)';
+            ctx.lineWidth = 1;
+            
+            // Top and bottom lines
+            ctx.beginPath();
+            ctx.moveTo(centerX - radius, centerY - 20);
+            ctx.lineTo(centerX + radius, centerY - 20);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX - radius, centerY + 20);
+            ctx.lineTo(centerX + radius, centerY + 20);
+            ctx.stroke();
+            
+            // Draw 12 points around circle
+            const cols = 12;
+            for (let col = 0; col < cols; col++) {
+                const angle = 2 * Math.PI * col / cols;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + 20 * Math.sin(angle);
+                
+                ctx.fillStyle = '#00b4d8';
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.fillStyle = '#a0c8ff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('12 positions around', centerX, centerY + 50);
+        }
+        
+        function drawDomePattern(ctx, width, height) {
+            const centerX = width / 2;
+            const centerY = height / 2 + 20;
+            const radius = Math.min(width, height) * 0.35;
+            
+            // Draw dome outline (semi-circle)
+            ctx.strokeStyle = 'rgba(0, 180, 216, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI);
+            ctx.stroke();
+            
+            // Draw grid points (3 rows)
+            const rows = 3;
+            for (let row = 0; row < rows; row++) {
+                const cols = 8;
+                const lat = Math.PI * 0.5 * (row / (rows - 1));
+                
+                for (let col = 0; col < cols; col++) {
+                    const lon = 2 * Math.PI * col / cols;
+                    const x = centerX + radius * Math.sin(lat) * Math.cos(lon);
+                    const y = centerY - radius * Math.cos(lat);
+                    
+                    ctx.fillStyle = '#00b4d8';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            ctx.fillStyle = '#a0c8ff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Sky dome only', centerX, centerY + 50);
+        }
+        
+        // Initialize capture grid
+        function initializeCaptureGrid() {
+            captureGrid = [];
+            const gridContainer = document.getElementById('capture-grid-visual');
+            gridContainer.innerHTML = '';
+            
+            let rows, colsPerRow;
+            
+            switch(captureMode) {
+                case 'sphere':
+                    rows = 5;
+                    colsPerRow = [1, 6, 12, 6, 1]; // Zenith, high, middle, low, nadir
+                    totalNeeded.textContent = '26';
+                    break;
+                case 'cylinder':
+                    rows = 1;
+                    colsPerRow = [12];
+                    totalNeeded.textContent = '12';
+                    break;
+                case 'dome':
+                    rows = 3;
+                    colsPerRow = [8, 8, 8];
+                    totalNeeded.textContent = '24';
+                    break;
+            }
+            
+            // Create grid rows
+            for (let row = 0; row < rows; row++) {
+                const gridRow = document.createElement('div');
+                gridRow.className = 'grid-row';
+                
+                const cols = colsPerRow[row];
+                for (let col = 0; col < cols; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    // Label cell
+                    let label = '';
+                    if (captureMode === 'sphere') {
+                        if (row === 0) label = 'Z';
+                        else if (row === 1) label = `H${col+1}`;
+                        else if (row === 2) label = `M${col+1}`;
+                        else if (row === 3) label = `L${col+1}`;
+                        else if (row === 4) label = 'N';
+                    } else {
+                        label = `${row+1}-${col+1}`;
+                    }
+                    
+                    cell.textContent = label;
+                    
+                    gridRow.appendChild(cell);
+                    captureGrid.push({
+                        row: row,
+                        col: col,
+                        captured: false,
+                        element: cell,
+                        label: label,
+                        positionLabel: getPositionLabel(row, col)
+                    });
+                }
+                
+                gridContainer.appendChild(gridRow);
+            }
+            
+            // Set current position
+            setCurrentGridPosition(2, 0); // Start at middle row
+            updateCaptureProgress();
+        }
+        
+        function getPositionLabel(row, col) {
+            if (captureMode === 'sphere') {
+                if (row === 0) return 'Zenith (straight up)';
+                if (row === 4) return 'Nadir (straight down)';
+                if (row === 1) return `High row, position ${col+1}`;
+                if (row === 3) return `Low row, position ${col+1}`;
+                return `Middle row, position ${col+1}`;
+            }
+            return `Row ${row+1}, Position ${col+1}`;
+        }
+        
+        function setCurrentGridPosition(row, col) {
+            // Clear previous current
+            captureGrid.forEach(cell => {
+                cell.element.classList.remove('current');
+            });
+            
+            // Find and set new current
+            const currentCell = captureGrid.find(cell => cell.row === row && cell.col === col);
+            if (currentCell) {
+                currentCell.element.classList.add('current');
+                currentGridPosition = { row: row, col: col };
+                
+                // Update guidance
+                updateCaptureGuidance(row, col);
+            }
+        }
+        
+        function updateCaptureGuidance(row, col) {
+            let guidance = '';
+            
+            if (captureMode === 'sphere') {
+                if (row === 0) {
+                    guidance = 'Point camera STRAIGHT UP for zenith shot';
+                } else if (row === 4) {
+                    guidance = 'Point camera STRAIGHT DOWN for nadir shot';
+                } else if (row === 1) {
+                    guidance = 'Tilt camera UP about 45° for high row';
+                } else if (row === 3) {
+                    guidance = 'Tilt camera DOWN about 45° for low row';
+                } else {
+                    guidance = 'Keep camera at eye level (middle row)';
+                }
+                
+                if (row > 0 && row < 4) {
+                    const cols = row === 2 ? 12 : 6;
+                    const angle = Math.round(360 * col / cols);
+                    guidance += ` • Rotate to ${angle}°`;
+                }
+            } else if (captureMode === 'cylinder') {
+                const angle = Math.round(360 * col / 12);
+                guidance = `Rotate to ${angle}° (keep camera level)`;
+            } else if (captureMode === 'dome') {
+                if (row === 0) {
+                    guidance = 'Point camera UP about 60°';
+                } else if (row === 1) {
+                    guidance = 'Point camera UP about 30°';
+                } else {
+                    guidance = 'Keep camera at horizon level';
+                }
+                const angle = Math.round(360 * col / 8);
+                guidance += ` • Rotate to ${angle}°`;
+            }
+            
+            captureGuidance.textContent = guidance;
+        }
+        
+        // Capture current position
+        captureCurrentPositionBtn.addEventListener('click', captureCurrentPosition);
+        
+        function captureCurrentPosition() {
+            const { row, col } = currentGridPosition;
+            
+            // Find the grid cell
+            const cell = captureGrid.find(c => c.row === row && c.col === col);
+            if (!cell || cell.captured) return;
+            
+            // Take photo
+            const canvas = document.createElement('canvas');
+            canvas.width = cameraView.videoWidth || 800;
+            canvas.height = cameraView.videoHeight || 600;
+            const context = canvas.getContext('2d');
             
             if (stream) {
-                const canvas = document.createElement('canvas');
-                canvas.width = cameraView.videoWidth;
-                canvas.height = cameraView.videoHeight;
-                const context = canvas.getContext('2d');
-                
                 context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
-                
-                capturedPhotos.push({
-                    data: canvas.toDataURL('image/jpeg', 0.8),
-                    width: canvas.width,
-                    height: canvas.height
-                });
             } else {
-                // Create placeholder
-                const canvas = document.createElement('canvas');
-                canvas.width = 800;
-                canvas.height = 600;
-                const ctx = canvas.getContext('2d');
-                
-                const hue = (capturedPhotos.length * 30) % 360;
-                ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 40px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(`Photo ${capturedPhotos.length + 1}`, canvas.width/2, canvas.height/2);
-                
-                capturedPhotos.push({
-                    data: canvas.toDataURL('image/jpeg', 0.9),
-                    width: canvas.width,
-                    height: canvas.height
-                });
+                // Create sample photo with position indicator
+                createSamplePhoto(context, canvas.width, canvas.height, row, col, cell.positionLabel);
             }
             
-            updatePhotoDisplay();
+            // Add to captured photos
+            capturedPhotos.push({
+                data: canvas.toDataURL('image/jpeg', 0.8),
+                width: canvas.width,
+                height: canvas.height,
+                gridPosition: { row, col },
+                label: cell.label,
+                positionLabel: cell.positionLabel
+            });
+            
+            // Mark cell as captured
+            cell.captured = true;
+            cell.element.classList.add('captured');
+            cell.element.classList.remove('current');
+            
+            // Update thumbnails
+            updateThumbnails();
+            
+            // Update progress
+            updateCaptureProgress();
             
             // Visual feedback
-            cameraView.style.filter = 'brightness(1.5)';
-            setTimeout(() => {
-                cameraView.style.filter = 'brightness(1)';
-            }, 200);
+            if (stream) {
+                cameraView.style.filter = 'brightness(1.5)';
+                setTimeout(() => cameraView.style.filter = 'brightness(1)', 200);
+            }
             
-            showToast(`Photo ${capturedPhotos.length} captured!`, 'success');
-        });
+            showToast(`Captured ${cell.positionLabel}`, 'success');
+            
+            // Move to next position
+            moveToNextPosition();
+        }
         
-        // Update photo display
-        function updatePhotoDisplay() {
-            photoCount.textContent = capturedPhotos.length;
-            capturedPhotosContainer.innerHTML = '';
+        function createSamplePhoto(ctx, width, height, row, col, positionLabel) {
+            // Different background for each row
+            let hue;
+            switch(captureMode) {
+                case 'sphere':
+                    if (row === 0) hue = 0; // Red for zenith
+                    else if (row === 4) hue = 120; // Green for nadir
+                    else if (row === 1) hue = 30; // Orange for high
+                    else if (row === 3) hue = 270; // Purple for low
+                    else hue = 210 + (col * 30); // Blue for middle
+                    break;
+                case 'cylinder':
+                    hue = 210 + (col * 30);
+                    break;
+                case 'dome':
+                    hue = 180 + (row * 60) + (col * 5);
+                    break;
+            }
+            
+            const gradient = ctx.createLinearGradient(0, 0, width, 0);
+            gradient.addColorStop(0, `hsl(${hue}, 70%, 50%)`);
+            gradient.addColorStop(1, `hsl(${hue + 20}, 70%, 50%)`);
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Add horizon line for non-zenith/nadir
+            if (row !== 0 && row !== 4 && captureMode === 'sphere') {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, height/2);
+                ctx.lineTo(width, height/2);
+                ctx.stroke();
+            }
+            
+            // Add text
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 40px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(positionLabel.split('(')[0].trim(), width/2, height/2 - 50);
+            
+            // Add coordinates
+            ctx.font = '20px Arial';
+            ctx.fillText(`Row ${row}, Col ${col}`, width/2, height/2 + 20);
+            
+            // Add overlapping feature for alignment
+            const featureX = 600 - (col * 50);
+            const featureY = 300 + (row - 2) * 50;
+            
+            if (featureX > 50 && featureX < width - 50) {
+                ctx.fillStyle = '#e63946';
+                ctx.beginPath();
+                ctx.arc(featureX, featureY, 40, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'white';
+                ctx.font = '16px Arial';
+                ctx.fillText('Align', featureX, featureY + 60);
+            }
+        }
+        
+        function updateThumbnails() {
+            sphericalCapturedPhotos.innerHTML = '';
             
             capturedPhotos.forEach((photo, index) => {
                 const img = document.createElement('img');
                 img.src = photo.data;
-                img.alt = `Photo ${index + 1}`;
+                img.alt = photo.positionLabel;
                 img.className = 'photo-thumbnail';
-                img.title = `Photo ${index + 1}`;
+                img.title = photo.positionLabel;
                 img.dataset.index = index;
-                capturedPhotosContainer.appendChild(img);
+                sphericalCapturedPhotos.appendChild(img);
                 
                 img.addEventListener('click', () => {
-                    // Remove active class from all thumbnails
-                    document.querySelectorAll('.photo-thumbnail').forEach(t => t.classList.remove('active'));
-                    // Add active class to clicked thumbnail
-                    img.classList.add('active');
-                    viewPhoto(photo.data, index);
+                    viewPhoto(photo.data, index, photo.positionLabel);
                 });
             });
-            
-            if (capturedPhotos.length >= 2) {
-                alignPhotosBtn.disabled = false;
-            } else {
-                alignPhotosBtn.disabled = true;
-            }
-            
-            resetPhotosBtn.disabled = capturedPhotos.length === 0;
         }
         
-        // View photo
-        function viewPhoto(photoData, index) {
+        function viewPhoto(photoData, index, label) {
             const overlay = document.createElement('div');
             overlay.className = 'overlay';
             overlay.style.zIndex = '1001';
             
             overlay.innerHTML = `
                 <div style="background: rgba(0,0,0,0.9); padding: 20px; border-radius: 10px; max-width: 90vw; max-height: 90vh;">
-                    <h3>Photo ${index + 1} of ${capturedPhotos.length}</h3>
+                    <h3>${label}</h3>
+                    <p style="color: #a0c8ff; margin-bottom: 10px;">Photo ${index + 1} of ${capturedPhotos.length}</p>
                     <img src="${photoData}" style="max-width: 80vw; max-height: 70vh; border-radius: 5px; margin: 15px 0;">
                     <div class="controls">
                         <button id="close-view" class="button secondary-btn">
@@ -946,28 +1526,182 @@
             });
         }
         
-        // Reset photos
-        resetPhotosBtn.addEventListener('click', () => {
-            if (capturedPhotos.length === 0) {
-                showToast('No photos to reset', 'info');
-                return;
-            }
+        // Skip current position
+        skipCurrentPositionBtn.addEventListener('click', () => {
+            const { row, col } = currentGridPosition;
+            const cell = captureGrid.find(c => c.row === row && c.col === col);
             
-            if (confirm(`Reset all ${capturedPhotos.length} captured photos?`)) {
-                capturedPhotos = [];
-                alignmentData = [];
-                panoramaImage = null;
-                updatePhotoDisplay();
-                showToast('All photos have been cleared', 'info');
+            if (cell) {
+                cell.element.style.opacity = '0.5';
+                showToast(`Skipped ${cell.positionLabel}`, 'info');
+                moveToNextPosition();
             }
         });
         
-        // Start alignment
-        alignPhotosBtn.addEventListener('click', () => {
-            if (capturedPhotos.length < 2) {
-                showToast('Need at least 2 photos to align', 'error');
+        function moveToNextPosition() {
+            const currentIndex = captureGrid.findIndex(c => 
+                c.row === currentGridPosition.row && c.col === currentGridPosition.col);
+            
+            // Find next uncaptured position
+            for (let i = currentIndex + 1; i < captureGrid.length; i++) {
+                if (!captureGrid[i].captured) {
+                    setCurrentGridPosition(captureGrid[i].row, captureGrid[i].col);
+                    return;
+                }
+            }
+            
+            // If all captured, show finish option
+            const capturedCount = captureGrid.filter(c => c.captured).length;
+            if (capturedCount >= captureGrid.length * 0.5) {
+                showToast('All positions captured! Click Finish to proceed.', 'success');
+                finishCaptureBtn.disabled = false;
+            } else {
+                // Loop back to beginning to find any missed
+                for (let i = 0; i < currentIndex; i++) {
+                    if (!captureGrid[i].captured) {
+                        setCurrentGridPosition(captureGrid[i].row, captureGrid[i].col);
+                        return;
+                    }
+                }
+                showToast('No more positions to capture', 'info');
+                finishCaptureBtn.disabled = false;
+            }
+        }
+        
+        function updateCaptureProgress() {
+            const captured = captureGrid.filter(c => c.captured).length;
+            const total = captureGrid.length;
+            
+            photoCount.textContent = captured;
+            
+            const progress = (captured / total) * 100;
+            captureProgressFill.style.width = `${progress}%`;
+            
+            // Enable finish button if at least 50% captured
+            finishCaptureBtn.disabled = captured < Math.max(3, total * 0.5);
+        }
+        
+        // Finish capture
+        finishCaptureBtn.addEventListener('click', () => {
+            if (capturedPhotos.length < 3) {
+                showToast('Need at least 3 photos to create a panorama', 'error');
                 return;
             }
+            
+            captureSection.style.display = 'none';
+            alignmentSection.style.display = 'block';
+            step2.classList.remove('active');
+            step3.classList.add('active');
+            
+            initializeSphericalAlignment();
+        });
+        
+        // Cancel capture
+        cancelCaptureBtn.addEventListener('click', () => {
+            if (confirm('Cancel capture session and return to setup?')) {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                capturedPhotos = [];
+                captureGrid = [];
+                cameraView.style.display = 'none';
+                cameraPlaceholder.style.display = 'flex';
+                
+                captureSection.style.display = 'none';
+                setupSection.style.display = 'block';
+                step2.classList.remove('active');
+                step1.classList.add('active');
+            }
+        });
+        
+        // Use sample photos
+        function useSamplePhotos() {
+            capturedPhotos = [];
+            permissionOverlay.style.display = 'none';
+            
+            // Create sample photos based on selected mode
+            let rows, colsPerRow;
+            
+            switch(captureMode) {
+                case 'sphere':
+                    rows = 5;
+                    colsPerRow = [1, 6, 12, 6, 1];
+                    break;
+                case 'cylinder':
+                    rows = 1;
+                    colsPerRow = [12];
+                    break;
+                case 'dome':
+                    rows = 3;
+                    colsPerRow = [8, 8, 8];
+                    break;
+            }
+            
+            for (let row = 0; row < rows; row++) {
+                const cols = colsPerRow[row];
+                for (let col = 0; col < cols; col++) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 800;
+                    canvas.height = 600;
+                    const ctx = canvas.getContext('2d');
+                    
+                    const positionLabel = getPositionLabel(row, col);
+                    createSamplePhoto(ctx, canvas.width, canvas.height, row, col, positionLabel);
+                    
+                    capturedPhotos.push({
+                        data: canvas.toDataURL('image/jpeg', 0.9),
+                        width: canvas.width,
+                        height: canvas.height,
+                        gridPosition: { row, col },
+                        label: captureMode === 'sphere' ? 
+                            (row === 0 ? 'Z' : row === 4 ? 'N' : row === 1 ? `H${col+1}` : row === 2 ? `M${col+1}` : `L${col+1}`) :
+                            `${row+1}-${col+1}`,
+                        positionLabel: positionLabel
+                    });
+                }
+            }
+            
+            // Go directly to alignment with sample photos
+            setupSection.style.display = 'none';
+            alignmentSection.style.display = 'block';
+            step1.classList.remove('active');
+            step3.classList.add('active');
+            
+            initializeSphericalAlignment();
+            showToast(`Loaded ${capturedPhotos.length} sample photos`, 'info');
+        }
+        
+        // Initialize spherical alignment
+        function initializeSphericalAlignment() {
+            // Clear previous grid
+            alignmentPhotoGrid.innerHTML = '';
+            
+            // Create grid of all captured photos
+            capturedPhotos.forEach((photo, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'alignment-cell';
+                cell.dataset.index = index;
+                
+                const img = document.createElement('img');
+                img.src = photo.data;
+                img.alt = photo.positionLabel;
+                
+                const label = document.createElement('div');
+                label.className = 'cell-label';
+                label.textContent = photo.label;
+                
+                cell.appendChild(img);
+                cell.appendChild(label);
+                alignmentPhotoGrid.appendChild(cell);
+                
+                cell.addEventListener('click', () => {
+                    document.querySelectorAll('.alignment-cell').forEach(c => c.classList.remove('active'));
+                    cell.classList.add('active');
+                    showAlignmentForPhoto(index);
+                });
+            });
             
             // Initialize alignment data
             alignmentData = capturedPhotos.map(() => ({
@@ -976,51 +1710,44 @@
                 rotation: 0
             }));
             
-            currentAlignmentIndex = 1;
+            currentAlignmentIndex = 0;
             totalPhotos.textContent = capturedPhotos.length;
             
-            // Switch to alignment section
-            captureSection.style.display = 'none';
-            alignmentSection.style.display = 'block';
-            step1.classList.remove('active');
-            step2.classList.add('active');
-            
-            // Setup canvas
+            // Setup canvas for alignment
             setupAlignmentCanvas();
-            updateAlignmentDisplay();
-        });
+            
+            // Select first photo
+            if (alignmentPhotoGrid.firstChild) {
+                alignmentPhotoGrid.firstChild.click();
+            }
+        }
         
-        // Setup alignment canvas
+        function showAlignmentForPhoto(index) {
+            currentAlignmentIndex = index;
+            currentPhotoIndex.textContent = index + 1;
+            
+            // Update sliders with current alignment data
+            const currentData = alignmentData[index] || { x: 0, y: 0, rotation: 0 };
+            xOffsetSlider.value = currentData.x;
+            yOffsetSlider.value = currentData.y;
+            rotationSlider.value = currentData.rotation;
+            
+            updateSliderValues();
+            drawAlignmentCanvas();
+        }
+        
+        // Setup alignment canvas (modified for spherical)
         function setupAlignmentCanvas() {
             const container = alignmentCanvas.parentElement;
             alignmentCanvas.width = container.clientWidth;
             alignmentCanvas.height = container.clientHeight;
             alignmentCtx = alignmentCanvas.getContext('2d');
             
-            // Setup mouse/touch events
+            // Setup mouse events
             alignmentCanvas.addEventListener('mousedown', startDrag);
             alignmentCanvas.addEventListener('mousemove', drag);
             alignmentCanvas.addEventListener('mouseup', endDrag);
             alignmentCanvas.addEventListener('mouseleave', endDrag);
-            
-            // Touch events for mobile
-            alignmentCanvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (e.touches.length === 1) {
-                    const touch = e.touches[0];
-                    startDrag({ clientX: touch.clientX, clientY: touch.clientY });
-                }
-            });
-            
-            alignmentCanvas.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                if (e.touches.length === 1) {
-                    const touch = e.touches[0];
-                    drag({ clientX: touch.clientX, clientY: touch.clientY });
-                }
-            });
-            
-            alignmentCanvas.addEventListener('touchend', endDrag);
             
             // Setup slider events
             xOffsetSlider.addEventListener('input', updateFromSliders);
@@ -1029,17 +1756,15 @@
             opacitySlider.addEventListener('input', updateFromSliders);
             
             // Setup control buttons
-            prevPhotoBtn.addEventListener('click', () => {
-                if (currentAlignmentIndex > 1) {
-                    currentAlignmentIndex--;
-                    updateAlignmentDisplay();
+            prevAlignmentPhotoBtn.addEventListener('click', () => {
+                if (currentAlignmentIndex > 0) {
+                    showAlignmentForPhoto(currentAlignmentIndex - 1);
                 }
             });
             
-            nextPhotoBtn.addEventListener('click', () => {
-                if (currentAlignmentIndex < capturedPhotos.length) {
-                    currentAlignmentIndex++;
-                    updateAlignmentDisplay();
+            nextAlignmentPhotoBtn.addEventListener('click', () => {
+                if (currentAlignmentIndex < capturedPhotos.length - 1) {
+                    showAlignmentForPhoto(currentAlignmentIndex + 1);
                 }
             });
             
@@ -1047,26 +1772,6 @@
             cancelAlignmentBtn.addEventListener('click', cancelAlignment);
         }
         
-        // Update alignment display
-        function updateAlignmentDisplay() {
-            currentPhotoIndex.textContent = currentAlignmentIndex + 1;
-            
-            // Update sliders with current alignment data
-            const currentData = alignmentData[currentAlignmentIndex] || { x: 0, y: 0, rotation: 0 };
-            xOffsetSlider.value = currentData.x;
-            yOffsetSlider.value = currentData.y;
-            rotationSlider.value = currentData.rotation;
-            opacitySlider.value = 50;
-            
-            updateSliderValues();
-            drawAlignmentCanvas();
-            
-            // Update button states
-            prevPhotoBtn.disabled = currentAlignmentIndex <= 1;
-            nextPhotoBtn.disabled = currentAlignmentIndex >= capturedPhotos.length - 1;
-        }
-        
-        // Update slider value displays
         function updateSliderValues() {
             xOffsetValue.textContent = xOffsetSlider.value;
             yOffsetValue.textContent = yOffsetSlider.value;
@@ -1076,7 +1781,7 @@
         
         // Draw alignment canvas
         function drawAlignmentCanvas() {
-            if (!alignmentCtx) return;
+            if (!alignmentCtx || currentAlignmentIndex >= capturedPhotos.length) return;
             
             const canvas = alignmentCanvas;
             const ctx = alignmentCtx;
@@ -1084,67 +1789,20 @@
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Draw previous photo (reference)
-            if (currentAlignmentIndex > 0) {
-                const prevPhoto = capturedPhotos[currentAlignmentIndex - 1];
-                const prevImg = new Image();
-                prevImg.onload = () => {
-                    // Scale to fit canvas height
-                    const scale = canvas.height / prevImg.height;
-                    const width = prevImg.width * scale;
-                    const x = (canvas.width - width) / 2;
-                    
-                    ctx.drawImage(prevImg, x, 0, width, canvas.height);
-                    
-                    // Draw current photo with alignment
-                    drawCurrentPhoto();
-                };
-                prevImg.src = prevPhoto.data;
-            } else {
-                drawCurrentPhoto();
-            }
-            
-            // Draw alignment guides
-            ctx.strokeStyle = 'rgba(0, 180, 216, 0.5)';
-            ctx.lineWidth = 2;
-            
-            // Center vertical line
-            ctx.beginPath();
-            ctx.moveTo(canvas.width / 2, 0);
-            ctx.lineTo(canvas.width / 2, canvas.height);
-            ctx.stroke();
-            
-            // Center horizontal line
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height / 2);
-            ctx.lineTo(canvas.width, canvas.height / 2);
-            ctx.stroke();
-            
-            // Draw instruction
-            ctx.fillStyle = 'white';
-            ctx.font = '16px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('Drag the photo or use sliders to align with the previous image', canvas.width / 2, 30);
-        }
-        
-        // Draw current photo with alignment
-        function drawCurrentPhoto() {
-            if (!alignmentCtx || currentAlignmentIndex >= capturedPhotos.length) return;
-            
-            const canvas = alignmentCanvas;
-            const ctx = alignmentCtx;
+            // Draw current photo
             const currentPhoto = capturedPhotos[currentAlignmentIndex];
             const currentData = alignmentData[currentAlignmentIndex] || { x: 0, y: 0, rotation: 0 };
             
             const img = new Image();
             img.onload = () => {
-                // Calculate scale to match canvas height
-                const scale = canvas.height / img.height;
+                // Calculate scale to fit canvas
+                const scale = Math.min(canvas.height / img.height, canvas.width / img.width) * 0.8;
                 const width = img.width * scale;
+                const height = img.height * scale;
                 
-                // Calculate position with alignment offsets
+                // Calculate position
                 const baseX = (canvas.width - width) / 2;
-                const baseY = 0;
+                const baseY = (canvas.height - height) / 2;
                 
                 const x = baseX + parseInt(xOffsetSlider.value);
                 const y = baseY + parseInt(yOffsetSlider.value);
@@ -1158,21 +1816,43 @@
                 
                 // Apply rotation around center
                 if (rotation !== 0) {
-                    ctx.translate(x + width / 2, y + canvas.height / 2);
+                    ctx.translate(x + width / 2, y + height / 2);
                     ctx.rotate(rotation * Math.PI / 180);
-                    ctx.translate(-(x + width / 2), -(y + canvas.height / 2));
+                    ctx.translate(-(x + width / 2), -(y + height / 2));
                 }
                 
                 // Draw the image
-                ctx.drawImage(img, x, y, width, canvas.height);
+                ctx.drawImage(img, x, y, width, height);
                 
                 ctx.restore();
                 
-                // Draw alignment indicator
-                ctx.fillStyle = `rgba(0, 180, 216, ${opacity})`;
-                ctx.font = 'bold 20px Arial';
-                ctx.textAlign = 'left';
-                ctx.fillText(`Photo ${currentAlignmentIndex + 1}`, 20, 40);
+                // Draw alignment guides
+                ctx.strokeStyle = 'rgba(0, 180, 216, 0.5)';
+                ctx.lineWidth = 2;
+                
+                // Center vertical line
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2, 0);
+                ctx.lineTo(canvas.width / 2, canvas.height);
+                ctx.stroke();
+                
+                // Center horizontal line
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height / 2);
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.stroke();
+                
+                // Draw photo info
+                ctx.fillStyle = 'white';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(currentPhoto.positionLabel, canvas.width / 2, 30);
+                ctx.fillText(`Photo ${currentAlignmentIndex + 1} of ${capturedPhotos.length}`, canvas.width / 2, 55);
+                
+                // Draw instructions
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#a0c8ff';
+                ctx.fillText('Drag the photo or use sliders to align with adjacent photos', canvas.width / 2, canvas.height - 20);
             };
             img.src = currentPhoto.data;
         }
@@ -1180,8 +1860,9 @@
         // Drag functions
         function startDrag(e) {
             isDragging = true;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
+            const rect = alignmentCanvas.getBoundingClientRect();
+            dragStartX = e.clientX - rect.left;
+            dragStartY = e.clientY - rect.top;
             currentOffsetX = parseInt(xOffsetSlider.value);
             currentOffsetY = parseInt(yOffsetSlider.value);
             alignmentCanvas.style.cursor = 'grabbing';
@@ -1190,8 +1871,12 @@
         function drag(e) {
             if (!isDragging) return;
             
-            const dx = e.clientX - dragStartX;
-            const dy = e.clientY - dragStartY;
+            const rect = alignmentCanvas.getBoundingClientRect();
+            const dragX = e.clientX - rect.left;
+            const dragY = e.clientY - rect.top;
+            
+            const dx = dragX - dragStartX;
+            const dy = dragY - dragStartY;
             
             xOffsetSlider.value = currentOffsetX + dx;
             yOffsetSlider.value = currentOffsetY + dy;
@@ -1225,26 +1910,26 @@
         function applyAlignment() {
             alignmentSection.style.display = 'none';
             processingSection.style.display = 'block';
-            step2.classList.remove('active');
+            step3.classList.remove('active');
             
-            // Process in background to avoid UI freeze
+            // Process in background
             setTimeout(() => {
-                createAlignedPanorama();
+                createSphericalPanorama();
             }, 100);
         }
         
         // Cancel alignment
         function cancelAlignment() {
-            if (confirm('Cancel alignment and return to capture?')) {
+            if (confirm('Cancel alignment and return to setup?')) {
                 alignmentSection.style.display = 'none';
-                captureSection.style.display = 'block';
-                step2.classList.remove('active');
+                setupSection.style.display = 'block';
+                step3.classList.remove('active');
                 step1.classList.add('active');
             }
         }
         
-        // Create aligned panorama
-        async function createAlignedPanorama() {
+        // Create spherical panorama
+        async function createSphericalPanorama() {
             try {
                 processingStatus.textContent = 'Loading images...';
                 progressBar.style.width = '10%';
@@ -1265,200 +1950,175 @@
                     await new Promise(resolve => setTimeout(resolve, 50));
                 }
                 
-                processingStatus.textContent = 'Creating panorama...';
+                processingStatus.textContent = 'Creating spherical panorama...';
                 progressBar.style.width = '40%';
                 
-                // Calculate panorama dimensions
-                const targetHeight = 800;
-                let totalWidth = 0;
-                const positions = [];
+                // For spherical panorama, we create an equirectangular projection (2:1 aspect ratio)
+                const finalWidth = 4096; // Standard size for spherical panoramas
+                const finalHeight = finalWidth / 2; // 2:1 aspect ratio
                 
-                for (let i = 0; i < images.length; i++) {
-                    const img = images[i];
-                    const align = alignmentData[i] || { x: 0, y: 0, rotation: 0 };
-                    
-                    // Scale to target height
-                    const scale = targetHeight / img.height;
-                    const scaledWidth = img.width * scale;
-                    
-                    // Adjust for rotation (simplified - in practice would need proper bounds calculation)
-                    const effectiveWidth = scaledWidth * Math.abs(Math.cos(align.rotation * Math.PI / 180));
-                    
-                    positions.push({
-                        x: totalWidth,
-                        y: 0,
-                        width: scaledWidth,
-                        height: targetHeight,
-                        scale: scale,
-                        rotation: align.rotation,
-                        offsetX: align.x * (scale / (alignmentCanvas.width / img.width)),
-                        offsetY: align.y * (scale / (alignmentCanvas.height / img.height))
-                    });
-                    
-                    totalWidth += effectiveWidth * 0.8; // 80% overlap for blending
-                }
-                
-                // Add extra space for the last image
-                const lastPos = positions[positions.length - 1];
-                totalWidth += lastPos.width * 0.2;
-                
-                // Create canvas
                 const canvas = document.createElement('canvas');
-                canvas.width = totalWidth;
-                canvas.height = targetHeight;
+                canvas.width = finalWidth;
+                canvas.height = finalHeight;
                 const ctx = canvas.getContext('2d');
                 
-                // Fill with background
-                ctx.fillStyle = '#1a1a2e';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Fill with blue sky at top, ground at bottom
+                const skyGradient = ctx.createLinearGradient(0, 0, 0, finalHeight * 0.4);
+                skyGradient.addColorStop(0, '#87CEEB');
+                skyGradient.addColorStop(1, '#1E90FF');
                 
-                processingStatus.textContent = 'Drawing aligned images...';
+                const groundGradient = ctx.createLinearGradient(0, finalHeight * 0.6, 0, finalHeight);
+                groundGradient.addColorStop(0, '#8B7355');
+                groundGradient.addColorStop(1, '#556B2F');
+                
+                ctx.fillStyle = skyGradient;
+                ctx.fillRect(0, 0, finalWidth, finalHeight * 0.4);
+                
+                ctx.fillStyle = groundGradient;
+                ctx.fillRect(0, finalHeight * 0.6, finalWidth, finalHeight * 0.4);
+                
+                // Middle area (where photos will go)
+                const middleGradient = ctx.createLinearGradient(0, finalHeight * 0.4, 0, finalHeight * 0.6);
+                middleGradient.addColorStop(0, '#1E90FF');
+                middleGradient.addColorStop(1, '#8B7355');
+                ctx.fillStyle = middleGradient;
+                ctx.fillRect(0, finalHeight * 0.4, finalWidth, finalHeight * 0.2);
+                
+                processingStatus.textContent = 'Placing photos in spherical projection...';
                 progressBar.style.width = '60%';
                 
-                // Draw each image with its alignment
+                // Place photos based on their grid positions (simplified projection)
                 for (let i = 0; i < images.length; i++) {
                     const img = images[i];
-                    const pos = positions[i];
+                    const photoData = capturedPhotos[i];
+                    const { row, col } = photoData.gridPosition;
+                    
+                    // Calculate position in equirectangular projection
+                    let x, y, width, height;
+                    
+                    if (captureMode === 'sphere') {
+                        if (row === 0) { // Zenith (top center)
+                            width = finalWidth * 0.2;
+                            height = finalHeight * 0.2;
+                            x = (finalWidth - width) / 2;
+                            y = 20;
+                        } else if (row === 4) { // Nadir (bottom center)
+                            width = finalWidth * 0.2;
+                            height = finalHeight * 0.2;
+                            x = (finalWidth - width) / 2;
+                            y = finalHeight - height - 20;
+                        } else {
+                            // Calculate for other rows
+                            const rowHeight = finalHeight * 0.15;
+                            const rowsFromCenter = row - 2; // -1, 0, 1
+                            y = finalHeight * 0.5 + (rowsFromCenter * rowHeight) - (rowHeight / 2);
+                            height = rowHeight;
+                            
+                            // Calculate horizontal position based on column
+                            const cols = (row === 1 || row === 3) ? 6 : 12;
+                            const colWidth = finalWidth / cols;
+                            x = col * colWidth;
+                            width = colWidth;
+                        }
+                    } else if (captureMode === 'cylinder') {
+                        // Simple cylindrical projection
+                        const colWidth = finalWidth / 12;
+                        x = col * colWidth;
+                        width = colWidth;
+                        y = finalHeight * 0.4;
+                        height = finalHeight * 0.2;
+                    } else { // dome
+                        const rowHeight = finalHeight * 0.15;
+                        y = 20 + (row * rowHeight);
+                        height = rowHeight;
+                        const colWidth = finalWidth / 8;
+                        x = col * colWidth;
+                        width = colWidth;
+                    }
+                    
+                    // Apply alignment adjustments
                     const align = alignmentData[i] || { x: 0, y: 0, rotation: 0 };
+                    x += align.x * (width / 800);
+                    y += align.y * (height / 600);
                     
                     ctx.save();
                     
-                    // Apply translation for positioning
-                    const x = pos.x + pos.offsetX;
-                    const y = pos.offsetY;
-                    
-                    // Apply rotation around center
+                    // Apply rotation
                     if (align.rotation !== 0) {
-                        const centerX = x + pos.width / 2;
-                        const centerY = y + pos.height / 2;
-                        ctx.translate(centerX, centerY);
+                        ctx.translate(x + width / 2, y + height / 2);
                         ctx.rotate(align.rotation * Math.PI / 180);
-                        ctx.translate(-centerX, -centerY);
+                        ctx.translate(-(x + width / 2), -(y + height / 2));
                     }
                     
                     // Draw image
-                    ctx.drawImage(img, x, y, pos.width, pos.height);
+                    ctx.drawImage(img, x, y, width, height);
                     
                     ctx.restore();
                     
-                    // Apply blending with previous image
+                    // Add blending with adjacent photos (simplified)
                     if (i > 0) {
-                        const blendWidth = pos.width * 0.2;
-                        const blendStartX = x - blendWidth / 2;
-                        
-                        // Create gradient for blending
-                        const gradient = ctx.createLinearGradient(blendStartX, 0, blendStartX + blendWidth, 0);
-                        gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
-                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                        
                         ctx.save();
                         ctx.globalCompositeOperation = 'overlay';
-                        ctx.fillStyle = gradient;
-                        ctx.fillRect(blendStartX, y, blendWidth, pos.height);
+                        ctx.globalAlpha = 0.2;
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(x, y, width, height);
                         ctx.restore();
                     }
                     
                     const progress = 60 + ((i + 1) / images.length) * 30;
                     progressBar.style.width = `${progress}%`;
                     
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    await new Promise(resolve => setTimeout(resolve, 50));
                 }
                 
-                // Crop to remove empty edges
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                let firstCol = 0;
-                let lastCol = canvas.width - 1;
+                // Add final touches
+                processingStatus.textContent = 'Finalizing spherical image...';
+                progressBar.style.width = '95%';
                 
-                // Find first non-empty column
-                for (let x = 0; x < canvas.width; x++) {
-                    let hasData = false;
-                    for (let y = 0; y < canvas.height; y++) {
-                        const idx = (y * canvas.width + x) * 4;
-                        if (imageData.data[idx] < 250 || imageData.data[idx + 1] < 250 || imageData.data[idx + 2] < 250) {
-                            hasData = true;
-                            break;
-                        }
-                    }
-                    if (hasData) {
-                        firstCol = Math.max(0, x - 10);
-                        break;
-                    }
-                }
+                // Add subtle vignette effect
+                const vignette = ctx.createRadialGradient(
+                    finalWidth / 2, finalHeight / 2, 0,
+                    finalWidth / 2, finalHeight / 2, finalWidth / 2
+                );
+                vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                vignette.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
                 
-                // Find last non-empty column
-                for (let x = canvas.width - 1; x >= 0; x--) {
-                    let hasData = false;
-                    for (let y = 0; y < canvas.height; y++) {
-                        const idx = (y * canvas.width + x) * 4;
-                        if (imageData.data[idx] < 250 || imageData.data[idx + 1] < 250 || imageData.data[idx + 2] < 250) {
-                            hasData = true;
-                            break;
-                        }
-                    }
-                    if (hasData) {
-                        lastCol = Math.min(canvas.width - 1, x + 10);
-                        break;
-                    }
-                }
-                
-                const cropWidth = lastCol - firstCol + 1;
-                
-                // Create final panorama with 2:1 aspect ratio
-                const finalWidth = cropWidth;
-                const finalHeight = Math.round(finalWidth / 2);
-                const finalCanvas = document.createElement('canvas');
-                finalCanvas.width = finalWidth;
-                finalCanvas.height = finalHeight;
-                const finalCtx = finalCanvas.getContext('2d');
-                
-                // Scale and center the panorama
-                const finalScale = finalHeight / targetHeight;
-                const finalScaledWidth = cropWidth * finalScale;
-                const finalX = (finalWidth - finalScaledWidth) / 2;
-                
-                // Draw cropped portion
-                finalCtx.drawImage(canvas, firstCol, 0, cropWidth, targetHeight, finalX, 0, finalScaledWidth, finalHeight);
-                
-                // Add gradients for sky and ground
-                const skyGradient = finalCtx.createLinearGradient(0, 0, 0, finalHeight * 0.4);
-                skyGradient.addColorStop(0, 'rgba(26, 42, 108, 0.6)');
-                skyGradient.addColorStop(1, 'transparent');
-                
-                const groundGradient = finalCtx.createLinearGradient(0, finalHeight * 0.6, 0, finalHeight);
-                groundGradient.addColorStop(0, 'transparent');
-                groundGradient.addColorStop(1, 'rgba(29, 24, 16, 0.6)');
-                
-                finalCtx.fillStyle = skyGradient;
-                finalCtx.fillRect(0, 0, finalWidth, finalHeight * 0.4);
-                
-                finalCtx.fillStyle = groundGradient;
-                finalCtx.fillRect(0, finalHeight * 0.6, finalWidth, finalHeight * 0.4);
+                ctx.save();
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.fillStyle = vignette;
+                ctx.fillRect(0, 0, finalWidth, finalHeight);
+                ctx.restore();
                 
                 progressBar.style.width = '100%';
-                processingStatus.textContent = 'Finalizing...';
+                processingStatus.textContent = 'Complete!';
                 
                 // Convert to data URL
-                panoramaImage = finalCanvas.toDataURL('image/jpeg', 0.9);
+                panoramaImage = canvas.toDataURL('image/jpeg', 0.85);
                 const size = Math.round((panoramaImage.length * 3) / 4 / 1024);
                 
                 // Update result
                 resultImage.src = panoramaImage;
-                resultInfoText.textContent = `Dimensions: ${finalWidth}x${finalHeight} • Size: ~${size} KB • Photos: ${capturedPhotos.length}`;
+                resultInfoText.innerHTML = `
+                    <strong>Spherical Panorama Created!</strong><br>
+                    Dimensions: ${finalWidth} × ${finalHeight} (2:1 equirectangular)<br>
+                    Size: ~${size} KB<br>
+                    Photos used: ${capturedPhotos.length}<br>
+                    Capture mode: ${captureMode}
+                `;
                 
                 setTimeout(() => {
                     processingSection.style.display = 'none';
                     resultSection.style.display = 'block';
-                    step3.classList.add('active');
+                    step4.classList.add('active');
                     
-                    showToast('360° panorama created successfully!', 'success');
+                    showToast('360° spherical panorama created successfully!', 'success');
                 }, 500);
                 
             } catch (error) {
-                console.error('Error creating panorama:', error);
-                showToast('Error creating panorama', 'error');
+                console.error('Error creating spherical panorama:', error);
+                showToast('Error creating panorama. Using simple method.', 'error');
                 
-                // Fall back to simple stitching
+                // Fall back to simple panorama
                 createSimplePanorama();
             }
         }
@@ -1477,8 +2137,8 @@
                     images.push(img);
                 }
                 
-                // Calculate dimensions
-                const targetHeight = 600;
+                // Calculate dimensions for 2:1 aspect ratio
+                const targetHeight = 800;
                 let totalWidth = 0;
                 
                 for (const img of images) {
@@ -1517,19 +2177,24 @@
                 
                 panoramaImage = finalCanvas.toDataURL('image/jpeg', 0.9);
                 resultImage.src = panoramaImage;
-                resultInfoText.textContent = `Dimensions: ${finalWidth}x${finalHeight} • Photos: ${capturedPhotos.length}`;
+                resultInfoText.innerHTML = `
+                    <strong>Panorama Created (Simple Method)</strong><br>
+                    Dimensions: ${finalWidth} × ${finalHeight}<br>
+                    Photos used: ${capturedPhotos.length}<br>
+                    Note: This is a cylindrical projection
+                `;
                 
                 processingSection.style.display = 'none';
                 resultSection.style.display = 'block';
-                step3.classList.add('active');
+                step4.classList.add('active');
                 
-                showToast('Panorama created (simple method)', 'info');
+                showToast('Panorama created (simple cylindrical projection)', 'info');
                 
             } catch (error) {
                 showToast('Failed to create panorama', 'error');
                 alignmentSection.style.display = 'none';
-                captureSection.style.display = 'block';
-                step2.classList.remove('active');
+                setupSection.style.display = 'block';
+                step3.classList.remove('active');
                 step1.classList.add('active');
             }
         }
@@ -1541,19 +2206,69 @@
                 return;
             }
             
+            const timestamp = new Date().getTime();
+            const filename = `spherical-panorama-${timestamp}-${captureMode}.jpg`;
+            
             const link = document.createElement('a');
-            link.download = `panorama-${new Date().getTime()}.jpg`;
+            link.download = filename;
             link.href = panoramaImage;
             link.click();
             
-            showToast('Image downloaded successfully', 'success');
+            showToast(`Image downloaded as ${filename}`, 'success');
+        });
+        
+        // View in 360° viewer
+        viewSphericalBtn.addEventListener('click', () => {
+            if (!panoramaImage) {
+                showToast('No image to view', 'error');
+                return;
+            }
+            
+            // Create a simple 360° viewer
+            const viewerHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>360° Viewer</title>
+                    <style>
+                        body { margin: 0; overflow: hidden; background: #000; }
+                        #viewer { width: 100vw; height: 100vh; }
+                    </style>
+                    <script src="https://cdn.jsdelivr.net/npm/panolens@0.11.0/build/panolens.min.js"><\/script>
+                </head>
+                <body>
+                    <div id="viewer"></div>
+                    <script>
+                        const panorama = new PANOLENS.ImagePanorama('${panoramaImage}');
+                        const viewer = new PANOLENS.Viewer({ container: document.getElementById('viewer') });
+                        viewer.add(panorama);
+                        
+                        // Add controls info
+                        const info = document.createElement('div');
+                        info.style.position = 'absolute';
+                        info.style.bottom = '20px';
+                        info.style.left = '20px';
+                        info.style.color = 'white';
+                        info.style.background = 'rgba(0,0,0,0.7)';
+                        info.style.padding = '10px';
+                        info.style.borderRadius = '5px';
+                        info.innerHTML = 'Drag to look around • Scroll to zoom • ESC to exit';
+                        document.body.appendChild(info);
+                    <\/script>
+                </body>
+                </html>
+            `;
+            
+            const viewerWindow = window.open();
+            viewerWindow.document.write(viewerHTML);
+            viewerWindow.document.close();
         });
         
         // New capture
         newCaptureBtn.addEventListener('click', () => {
             resultSection.style.display = 'none';
-            captureSection.style.display = 'block';
-            step3.classList.remove('active');
+            setupSection.style.display = 'block';
+            step4.classList.remove('active');
             step1.classList.add('active');
             
             if (stream) {
@@ -1561,14 +2276,12 @@
                 stream = null;
             }
             
-            cameraView.style.display = 'none';
-            cameraPlaceholder.style.display = 'flex';
-            startCameraBtn.disabled = false;
-            capturePhotoBtn.disabled = true;
-            
             capturedPhotos = [];
+            captureGrid = [];
             alignmentData = [];
-            updatePhotoDisplay();
+            panoramaImage = null;
+            
+            updateCapturePatternPreview();
             
             showToast('Ready for new capture session', 'info');
         });
